@@ -382,37 +382,37 @@ async def process_video(client, event, url, cookies_env_var, check_duration_and_
  
          
         chat_id = event.chat_id
-        SIZE = 2 * 1024 * 1024
-        caption = f"{title}"
+        SIZE_LIMIT = 2 * 1024 * 1024 * 1024 # 2GB
+        caption = f"**{title}**"
      
-        if os.path.exists(download_path) and os.path.getsize(download_path) > SIZE:
-            prog = await client.send_message(chat_id, "**__Starting Upload...__**")
-            await split_and_upload_file(app, chat_id, download_path, caption)
-            await prog.delete()
-         
         if os.path.exists(download_path):
-            await progress_message.delete()
-            prog = await client.send_message(chat_id, "**__Starting Upload...__**")
-            uploaded = await fast_upload(
-                client, download_path,
-                reply=prog,
-                progress_bar_function=lambda done, total: progress_callback(done, total, chat_id)
-            )
-            await client.send_file(
-                event.chat_id,
-                uploaded,
-                caption=f"**{title}**",
-                attributes=[
-                    DocumentAttributeVideo(
-                        duration=metadata['duration'],
-                        w=metadata['width'],
-                        h=metadata['height'],
-                        supports_streaming=True
-                    )
-                ],
-                thumb=THUMB if THUMB else None
-            )
-            if prog:
+            if os.path.getsize(download_path) > SIZE_LIMIT:
+                await progress_message.delete()
+                prog = await client.send_message(chat_id, "**__File is large, splitting and uploading...__**")
+                await split_and_upload_file(app, chat_id, download_path, caption)
+                await prog.delete()
+            else:
+                await progress_message.delete()
+                prog = await client.send_message(chat_id, "**__Starting Upload...__**")
+                uploaded = await fast_upload(
+                    client, download_path,
+                    reply=prog,
+                    progress_bar_function=lambda done, total: progress_callback(done, total, chat_id)
+                )
+                await client.send_file(
+                    event.chat_id,
+                    uploaded,
+                    caption=caption,
+                    attributes=[
+                        DocumentAttributeVideo(
+                            duration=metadata['duration'],
+                            w=metadata['width'],
+                            h=metadata['height'],
+                            supports_streaming=True
+                        )
+                    ],
+                    thumb=THUMB if THUMB else None
+                )
                 await prog.delete()
         else:
             await event.reply("**__File not found after download. Something went wrong!__**")

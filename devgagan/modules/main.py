@@ -66,8 +66,8 @@ async def check_interval(user_id, freecheck):
 
 async def set_interval(user_id, interval_minutes=45):
     now = datetime.now()
-    # Set the cooldown interval for the user
-    interval_set[user_id] = now + timedelta(seconds=interval_minutes)
+    # Set the cooldown interval for the user (converted minutes to seconds for timedelta)
+    interval_set[user_id] = now + timedelta(minutes=interval_minutes)
     
 
 @app.on_message(
@@ -263,7 +263,6 @@ async def batch_link(_, message):
                 reply_markup=keyboard
             )
             await app.send_message(message.chat.id, "😘 𝗖ꪮ𝗺𝗽𝗹𝗲𝘁𝗲 𝗛ꪮ 𝗚𝗮𝘆𝗮 𝗕ꪮ$$ 😎")
-            await app.send_message(target_chat_id, "😘 𝗖ꪮ𝗺𝗽𝗹𝗲𝘁𝗲 𝗛ꪮ 𝗚𝗮𝘆𝗮 𝗕ꪮ$$ 😎")
             return
             
         # Handle special links with userbot
@@ -295,6 +294,8 @@ async def batch_link(_, message):
         await app.send_message(message.chat.id, f"Error: {e}")
     finally:
         users_loop.pop(user_id, None)
+        if userbot:
+            await userbot.stop()
 
 @app.on_message(filters.command("cancel"))
 async def stop_batch(_, message):

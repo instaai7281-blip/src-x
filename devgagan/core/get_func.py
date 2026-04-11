@@ -495,7 +495,8 @@ async def get_msg(userbot: TelegramClient, sender: int, edit_id: int, msg_link: 
 
         # Upload media
         # await edit.edit("**Checking file...**")
-        if file_size > size_limit and (free_check == 1 or pro is None):
+        free_check = await chk_user(message, sender)
+        if file_size > size_limit and (free_check == 0 or pro is None):
             await edit.delete()
             await split_and_upload_file(app, sender, target_chat_id, file, caption, topic_id)
             return
@@ -662,10 +663,11 @@ async def copy_message_with_chat_id(app, userbot, sender, chat_id, message_id, e
             if msg.photo:
                 result = await app.send_photo(target_chat_id, file, caption=final_caption, reply_to_message_id=topic_id)
             elif msg.video or msg.document:
-                freecheck = await chk_user(chat_id, sender)
-                if file_size > size_limit and (freecheck == 1 or pro is None):
+                freecheck = await chk_user(None, sender) # Modified for simplicity, adjust if necessary
+                file_size = get_message_file_size(msg)
+                if file_size > size_limit and (freecheck == 0 or pro is None):
                     await edit.delete()
-                    await split_and_upload_file(app, sender, target_chat_id, file, caption, topic_id)
+                    await split_and_upload_file(app, sender, target_chat_id, file, final_caption, topic_id)
                     return       
                 elif file_size > size_limit:
                     await handle_large_file(file, sender, edit, final_caption)
