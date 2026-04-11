@@ -18,8 +18,9 @@ from pyrogram import Client
 from pyrogram.enums import ParseMode 
 from motor.motor_asyncio import AsyncIOMotorClient
 import time
-from telethon.sync import TelegramClient
 from config import API_ID, API_HASH, BOT_TOKEN, STRING, STRINGS, MONGO_DB, MAX_CONCURRENT_TASKS
+
+print("--- RestrictBot: Optimized Build v2.5 Loading ---")
 
 loop = asyncio.get_event_loop()
 
@@ -51,6 +52,7 @@ else:
 # Global Semaphore for concurrency control
 task_semaphore = asyncio.Semaphore(MAX_CONCURRENT_TASKS)
 
+from telethon.sync import TelegramClient
 sex = TelegramClient('sexrepo', API_ID, API_HASH).start(bot_token=BOT_TOKEN)
 
 
