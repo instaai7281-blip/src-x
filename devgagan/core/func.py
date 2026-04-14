@@ -166,16 +166,23 @@ async def userbot_join(userbot, invite_link):
         print(e)
         return "Could not join, try joining manually."
 def get_link(string):
-    regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
-    url = re.findall(regex,string)   
+    # Regex for standard http/https links
+    regex_web = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+    # Regex for Telegram deep links (tg://)
+    regex_tg = r"(tg://openmessage\?(?:user_id|chat_id)=-?\d+&message_id=\d+)"
+    
+    url_web = re.findall(regex_web, string)
+    url_tg = re.findall(regex_tg, string)
+    
     try:
-        link = [x[0] for x in url][0]
-        if link:
-            return link
-        else:
-            return False
+        if url_tg:
+            return url_tg[0]
+        if url_web:
+            return url_web[0][0]
+        return False
     except Exception:
         return False
+
 def video_metadata(file):
     default_values = {'width': 1, 'height': 1, 'duration': 1}
     try:

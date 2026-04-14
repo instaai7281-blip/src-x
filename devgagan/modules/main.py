@@ -71,7 +71,7 @@ async def set_interval(user_id, interval_minutes=45):
     
 
 @app.on_message(
-    filters.regex(r'https?://(?:www\.)?(?:t\.me|telegram\.me|telegram\.dog)/[^\s]+|tg://openmessage\?user_id=\w+&message_id=\d+')
+    filters.regex(r'https?://(?:www\.)?(?:t\.me|telegram\.me|telegram\.dog)/[^\s]+|tg://openmessage\?(?:user_id|chat_id)=-?\d+&message_id=\d+')
     & filters.private
 )
 async def single_link(_, message):

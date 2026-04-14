@@ -358,10 +358,28 @@ async def get_msg(userbot: TelegramClient, sender: int, edit_id: int, msg_link: 
             import urllib.parse
             parsed_url = urllib.parse.urlparse(msg_link)
             params = urllib.parse.parse_qs(parsed_url.query)
-            chat = params.get("user_id", [None])[0]
+            # Handle user_id, chat_id and id parameters
+            chat_val = params.get("user_id", [None])[0] or params.get("chat_id", [None])[0] or params.get("id", [None])[0]
             msg_id = int(params.get("message_id", [0])[0]) + i
-            if chat and (chat.isdigit() or chat.startswith("-")):
-                chat = int(chat)
+            if chat_val:
+                chat_val = chat_val.strip()
+                if chat_val.isdigit():
+                    if len(chat_val) >= 10 and not chat_val.startswith("-100"):
+                        chat = int("-100" + chat_val)
+                    else:
+                        chat = int(chat_val)
+                elif chat_val.startswith("-"):
+                    chat = int(chat_val)
+                else:
+                    chat = chat_val
+            
+            # Update processing message for private links
+            edit = await app.edit_message_text(sender, edit_id, "Processing Private Link... 🔐")
+            
+            # Check if userbot is available
+            if userbot is None:
+                await edit.edit("Please login using /login to access private links.")
+                return
         elif 't.me/' in msg_link or 'telegram.me/' in msg_link or 'telegram.dog/' in msg_link:
             if '/s/' in msg_link: # handles stories
                 edit = await app.edit_message_text(sender, edit_id, "Story Link Detected...")
@@ -505,7 +523,11 @@ async def get_msg(userbot: TelegramClient, sender: int, edit_id: int, msg_link: 
     except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):
         await app.edit_message_text(sender, edit_id, "🌚 First do /login & then send me the Link again send /guide for more help")
     except Exception as e:
-        # await app.edit_message_text(sender, edit_id, f"Failed to save: `{msg_link}`\n\nError: {str(e)}")
+        if edit:
+            try:
+                await edit.edit(f"Failed to process: `{msg_link}`\n\n**Error:** {str(e)}")
+            except:
+                pass
         print(f"Error: {e}")
     finally:
         # Clean up
