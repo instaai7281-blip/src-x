@@ -366,17 +366,19 @@ async def process_video(client, event, url, cookies_env_var, check_duration_and_
         thumbnail_url = info_dict.get('thumbnail', None)
         THUMB = None
  
-         
-        if thumbnail_url:
+        # ✅ Check for custom thumbnail first
+        custom_thumb = os.path.join("./thumbnails", f"{event.sender_id}.jpg")
+        if os.path.exists(custom_thumb):
+            THUMB = custom_thumb
+        elif thumbnail_url:
             thumbnail_file = os.path.join(tempfile.gettempdir(), get_random_string() + ".jpg")
             downloaded_thumb = d_thumbnail(thumbnail_url, thumbnail_file)
             if downloaded_thumb:
                 logger.info(f"Thumbnail saved at: {downloaded_thumb}")
- 
-        if thumbnail_file:
-            THUMB = thumbnail_file
-        else:
-            THUMB = await screenshot(download_path, metadata['duration'], event.sender_id)
+                THUMB = downloaded_thumb
+
+        if not THUMB:
+            THUMB = await screenshot(download_path, metadata['duration'], event.sender_id) 
  
          
  
@@ -427,7 +429,7 @@ async def process_video(client, event, url, cookies_env_var, check_duration_and_
             os.remove(temp_cookie_path)
         if thumbnail_file and os.path.exists(thumbnail_file):
             os.remove(thumbnail_file)
-        if THUMB and os.path.exists(THUMB):
+        if THUMB and os.path.exists(THUMB) and not THUMB.startswith("./thumbnails"):
             os.remove(THUMB)
  
 

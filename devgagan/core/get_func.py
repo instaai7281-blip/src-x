@@ -181,14 +181,12 @@ async def upload_media(sender, target_chat_id, file, caption, edit, topic_id):
         thumb_path = None  
 
         # ✅ Generate thumbnail ONLY if it's a video
-        if file.lower().endswith(('.mp4', '.mkv', '.mov', '.avi', '.webm')):
+        if file.lower().endswith(tuple(VIDEO_EXTENSIONS)):
             # Try to reuse a saved custom thumbnail first
             thumb_path = thumbnail(sender)
             if not thumb_path:
-                # Generate a thumbnail from the video using ffmpeg (fallback to screenshot())
-
+                # Generate a thumbnail from the video using ffmpeg
                 try:
-                    # Generate unique temp thumb
                     thumb_path = await screenshot(file, duration, sender)
                 except Exception:
                     thumb_path = None
@@ -198,7 +196,7 @@ async def upload_media(sender, target_chat_id, file, caption, edit, topic_id):
         clean_name = clean_filename(os.path.splitext(raw_name)[0])
         file_name = f"{clean_name}.{ext}"
 
-        video_formats = {'mp4', 'mkv', 'avi', 'mov'}
+        video_formats = set(VIDEO_EXTENSIONS)
         image_formats = {'jpg', 'png', 'jpeg'}
 
         # ✅ Generate cleaned caption for user post
@@ -302,10 +300,7 @@ async def upload_media(sender, target_chat_id, file, caption, edit, topic_id):
 
             )
 
-            # Generate thumbnail once
-            thumb_path = thumbnail(sender)
-            if not thumb_path:
-                thumb_path = await screenshot(file, duration, sender)
+            # Use already generated/retrieved thumb_path
 
             await gf.send_file(
                 target_chat_id,
@@ -1079,7 +1074,7 @@ async def callback_query_handler(event):
             user_chat_ids.pop(user_id, None)
             user_rename_preferences.pop(user_id_str, None)
             user_caption_preferences.pop(user_id_str, None)
-            thumbnail_path = f"{user_id}.jpg"
+            thumbnail_path = os.path.join(THUMBNAIL_DIR, f"{user_id}.jpg")
             if os.path.exists(thumbnail_path):
                 os.remove(thumbnail_path)
             await event.respond("✅ Reset successfully, to logout click /logout")
@@ -1088,7 +1083,8 @@ async def callback_query_handler(event):
     
     elif event.data == b'remthumb':
         try:
-            os.remove(f'{user_id}.jpg')
+            thumbnail_path = os.path.join(THUMBNAIL_DIR, f"{user_id}.jpg")
+            os.remove(thumbnail_path)
             await event.respond('Thumbnail removed successfully!')
         except FileNotFoundError:
             await event.respond("No thumbnail found to remove.")
@@ -1100,9 +1096,10 @@ async def save_thumbnail(event):
 
     if event.photo:
         temp_path = await event.download_media()
-        if os.path.exists(f'{user_id}.jpg'):
-            os.remove(f'{user_id}.jpg')
-        os.rename(temp_path, f'./{user_id}.jpg')
+        thumbnail_path = os.path.join(THUMBNAIL_DIR, f"{user_id}.jpg")
+        if os.path.exists(thumbnail_path):
+            os.remove(thumbnail_path)
+        os.rename(temp_path, thumbnail_path)
         await event.respond('Thumbnail saved successfully!')
 
     else:
@@ -1213,7 +1210,10 @@ async def handle_large_file(file, sender, edit, caption):
     width = metadata['width']
     height = metadata['height']
     
-    thumb_path = await screenshot(file, duration, sender)
+    # ✅ Handle thumbnail
+    thumb_path = thumbnail(sender)
+    if not thumb_path and file_extension in VIDEO_EXTENSIONS:
+        thumb_path = await screenshot(file, duration, sender)
     try:
         if file_extension in VIDEO_EXTENSIONS:
             dm = await pro.send_video(
