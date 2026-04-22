@@ -19,7 +19,7 @@ import gc
 import os
 import re
 from typing import Callable
-from devgagan import app
+from devgagan import app, get_client
 import aiofiles
 from devgagan import sex as gf
 from telethon.tl.types import DocumentAttributeVideo, Message
@@ -86,10 +86,10 @@ collection = db[COLLECTION_NAME]
 
 if STRINGS:
     from devgagan import pro
-    print("App imported")
 else:
     pro = None
-    print("STRINGS is not available. 'app' is set to None.")
+
+user_progress = {}
 
 async def is_enabled(user_id, media_type):
     data = await odb.get_data(user_id)
@@ -422,11 +422,23 @@ async def get_msg(userbot: TelegramClient, sender: int, edit_id: int, msg_link: 
             # If copy fails, fallback to extraction logic below
             await edit.edit("**Copy failed, trying extraction...**")
 
-            
         # Fetch the target message
-        msg = await userbot.get_messages(chat, msg_id)
+        client = userbot if userbot else get_client() or app
+        
+        try:
+            msg = await client.get_messages(chat, msg_id)
+        except Exception as e:
+            if userbot: # If userbot failed, try fallback
+                client = get_client() or app
+                msg = await client.get_messages(chat, msg_id)
+            else:
+                raise e
+        
         if not msg or msg.service or msg.empty:
             return
+        
+        # Ensure extraction uses the same client
+        userbot = client
 
         target_chat_id = user_chat_ids.get(message.chat.id, message.chat.id)
         topic_id = None
@@ -641,10 +653,25 @@ async def copy_message_with_chat_id(app, userbot, sender, chat_id, message_id, e
     size_limit = 2 * 1024 * 1024 * 1024  # 2 GB size limit
 
     try:
-        # Try copying using the main bot first
-        msg = await app.get_messages(chat_id, message_id)
+        # Try with app or fallback client
+        client_to_use = app
+        try:
+            msg = await client_to_use.get_messages(chat_id, message_id)
+            if not msg or msg.empty:
+                raise Exception("Message not found")
+        except Exception:
+            client_to_use = get_client()
+            if client_to_use:
+                msg = await client_to_use.get_messages(chat_id, message_id)
+            else:
+                return False
+
         if not msg or msg.empty:
-            raise Exception("Message not found or empty")
+            return False
+
+        # If protected content, force extraction (return False here)
+        if msg.has_protected_content:
+            return False
 
         custom_caption = get_user_caption_preference(sender)
         final_caption = format_caption(msg.caption or '', sender, custom_caption)
@@ -1277,7 +1304,6 @@ async def handle_large_file(file, sender, edit, caption):
         if thumb_path and os.path.exists(thumb_path):
             os.remove(thumb_path)
         gc.collect()
-        return
 
 
 def strip_unicode_junk(text: str) -> str:
