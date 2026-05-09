@@ -490,12 +490,13 @@ async def get_msg(userbot: TelegramClient, sender: int, edit_id: int, msg_link: 
             return
 
         # Fetch the target message
+        # Priority: 1. Userbot (Personal) 2. Shared Userbot (Pro) 3. Bot (App)
         client = userbot if userbot else (get_client() or app)
         
         try:
             msg = await client.get_messages(chat, msg_id)
         except Exception as e:
-            if userbot: # If userbot failed, try fallback
+            if userbot: # If userbot failed, try fallback to shared client or bot
                 client = get_client() or app
                 msg = await client.get_messages(chat, msg_id)
             else:
@@ -503,6 +504,18 @@ async def get_msg(userbot: TelegramClient, sender: int, edit_id: int, msg_link: 
         
         if not msg or msg.service or msg.empty:
             return
+
+        # Special handling for protected content (Restrict Saving Content)
+        # Main bots (app) cannot download protected content; only user accounts (userbots) can.
+        if getattr(msg, "has_protected_content", False) and client == app:
+            shared_client = get_client()
+            if shared_client:
+                client = shared_client
+                # Refetch message with the new client to ensure session consistency for download
+                msg = await client.get_messages(chat, msg_id)
+            else:
+                await edit.edit("🔒 **Protected Content Detected**\n\nThis channel has 'Restrict Saving Content' enabled. Only users who have **logged in** via /login can download this. Please login and try again.")
+                return
         
         target_chat_id = user_chat_ids.get(message.chat.id, message.chat.id)
         topic_id = None
@@ -534,16 +547,23 @@ async def get_msg(userbot: TelegramClient, sender: int, edit_id: int, msg_link: 
         await edit.edit("**>Downloading...Darling 😘**")
 
         # Download media
-        # Use 'client' instead of 'userbot' to ensure we use the correct session
-        file = await client.download_media(
-            msg,
-            file_name=file_name,            
-            progress_args=("╔══━⚡️ Downloading ⚡️━══╗\n", edit, time.time()),
-            progress=progress_bar
-        )
+        try:
+            file = await client.download_media(
+                msg,
+                file_name=file_name,            
+                progress_args=("╔══━⚡️ Downloading ⚡️━══╗\n", edit, time.time()),
+                progress=progress_bar
+            )
+        except Exception as e:
+            print(f"Download error: {e}")
+            file = None
         
         if not file:
-            await edit.edit("❌ **Download failed** - The file might be corrupted or the bot's session has expired.")
+            # Final fallback: if it's protected and failed, maybe the shared client isn't in the channel?
+            if getattr(msg, "has_protected_content", False) and not userbot:
+                 await edit.edit("❌ **Protected Download Failed**\n\nThis content is protected and the shared userbot couldn't access it. Please **login with your own account** using /login to bypass this restriction.")
+            else:
+                 await edit.edit(f"❌ **Download failed** - The file might be corrupted or the session has expired.\n\n**Error:** `{str(client.__class__.__name__)} session issue`")
             return
 
         caption = await get_final_caption(msg, sender)
