@@ -688,7 +688,7 @@ async def get_final_caption(msg, sender):
     # ✅ Aggressive text cleanup: remove anything after an @mention or links entirely if they denote other sources
     # For captions, user asked to only retain their tag, removing any other mentions.
     # We replace any @mention with the custom renaming tag or a default if not set.
-    user_tag = custom_caption if custom_caption else '**⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗**'
+    user_tag = custom_caption if custom_caption else '**🖤 Sᴛꪮʟᴇɴ Hᴀᴘᴘɪɴᴇss ⚝**'
     final_caption = re.sub(r'@\w+', user_tag, final_caption)
 
     # Replace all links with your channel link
@@ -881,7 +881,7 @@ def format_caption(original_caption, sender, custom_caption):
     original_caption = re.sub(r'#\S+', '', original_caption)
 
     # ✅ Replace @mentions aggressively
-    user_tag = custom_caption if custom_caption else '**⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗**'
+    user_tag = custom_caption if custom_caption else '**🖤 Sᴛꪮʟᴇɴ Hᴀᴘᴘɪɴᴇss ⚝**'
     original_caption = re.sub(r'@\w+', user_tag, original_caption)
 
     # ✅ Replace telegram links
@@ -906,7 +906,7 @@ def format_caption(original_caption, sender, custom_caption):
     original_caption = re.sub(
         r'(📩)?\s*(Downloaded[\s_]*By)\s*[:➤>–\-]*\s*.*',
 
-        r'**⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗**',
+        r'**🖤 Sᴛꪮʟᴇɴ Hᴀᴘᴘɪɴᴇss ⚝**',
         original_caption,
         flags=re.IGNORECASE
     )
