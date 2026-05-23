@@ -22,6 +22,8 @@ mutagen
 yt-dlp
 speedtest-cli
 python-dotenv
+PyMuPDF
+
 PyPDF2
 reportlab
 dnspython

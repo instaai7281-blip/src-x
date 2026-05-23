@@ -570,6 +570,14 @@ async def get_msg(userbot: TelegramClient, sender: int, edit_id: int, msg_link: 
 
         # Rename file
         file = await rename_file(file, sender)
+
+        # Apply PDF Watermark if applicable
+        if file and str(file).lower().endswith('.pdf'):
+            watermark = load_user_data(sender, "watermark_text")
+            if watermark:
+                await edit.edit("**📄 Adding PDF Watermark...**")
+                file = add_pdf_watermark(file, watermark)
+
         if msg.audio:
             if not await is_enabled(sender, "audio"):
                 return
@@ -1020,6 +1028,7 @@ async def send_settings_message(chat_id, user_id):
         [Button.inline("🔆 Set Caption", b'setcaption'), Button.inline("💠 Replace Words", b'setreplacement')],
         [Button.inline("‼️ Remove Words 🗑️", b'delete')],
         [Button.inline("🖼️ Set Thumbnail", b'setthumb'), Button.inline("🧲 Remove Thumbnail", b'remthumb')],
+        [Button.inline("📄 Set PDF Watermark", b'setpdfwatermark'), Button.inline("🗑️ Remove PDF Watermark", b'rempdfwatermark')],
         [Button.inline("📤 Upload Method", b'uploadmethod'), Button.inline("⛔ Logout", b'logout')],
         [Button.inline("♻️ Reset All Settings ☢️", b'reset')],
         [Button.url("💞 Contact Owner 🦋", "https://t.me/Chosen_Onex_bot")]
@@ -1080,6 +1089,24 @@ async def callback_query_handler(event):
     elif data == 'setthumb':
         pending_photos[user_id] = True
         await event.respond("📸 Send the **photo** you want to use as your custom thumbnail.")
+
+    elif data == 'setpdfwatermark':
+        await event.respond("📄 Send the **text** you want to use as your custom PDF watermark.")
+        sessions[user_id] = 'setpdfwatermark'
+
+    elif data == 'rempdfwatermark':
+        try:
+            collection.update_one(
+                {"_id": user_id},
+                {"$unset": {"watermark_text": ""}}
+            )
+            collection.update_one(
+                {"user_id": user_id},
+                {"$unset": {"watermark_text": ""}}
+            )
+            await event.respond("✅ **PDF Watermark removed successfully!**")
+        except Exception as e:
+            await event.respond(f"❌ Error removing watermark: {e}")
 
     elif event.data == b'uploadmethod':
         # Retrieve the user's current upload method (default to Pyrogram)
@@ -1218,6 +1245,20 @@ async def handle_user_input(event):
             delete_words.update(words_to_delete)
             save_delete_words(user_id, delete_words)
             await event.respond(f"🗑️ Words added to delete list: {', '.join(words_to_delete)}")
+
+        elif session_type == 'setpdfwatermark':
+            watermark_text = event.text
+            collection.update_one(
+                {"_id": user_id},
+                {"$set": {"watermark_text": watermark_text}},
+                upsert=True
+            )
+            collection.update_one(
+                {"user_id": user_id},
+                {"$set": {"watermark_text": watermark_text}},
+                upsert=True
+            )
+            await event.respond(f"✅ **PDF Watermark set to:** `{watermark_text}`")
                
             
         del sessions[user_id]

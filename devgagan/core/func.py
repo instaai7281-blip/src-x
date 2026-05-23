@@ -399,3 +399,36 @@ async def prog_bar(current, total, ud_type, message, start):
 def thumbnail(sender):
     path = os.path.join(THUMBNAIL_DIR, f'{sender}.jpg')
     return path if os.path.exists(path) else None
+
+def add_pdf_watermark(pdf_path, watermark_text):
+    try:
+        import fitz
+        if not watermark_text:
+            return pdf_path
+            
+        abs_path = os.path.abspath(pdf_path)
+        doc = fitz.open(abs_path)
+        for page in doc:
+            rect = page.rect
+            width = rect.width
+            height = rect.height
+            
+            # Add watermark text at the bottom of all pages
+            footer_rect = fitz.Rect(0, height - 40, width, height - 10)
+            page.insert_textbox(
+                footer_rect,
+                watermark_text,
+                fontsize=14,
+                fontname="helv",
+                color=(0.5, 0.5, 0.5),  # Medium gray
+                fill_opacity=0.6,       # Opacity
+                align=1                 # Centered
+            )
+            
+        # Save modifications
+        doc.save(abs_path, incremental=False, encryption=fitz.PDF_ENCRYPT_KEEP)
+        doc.close()
+        return abs_path
+    except Exception as e:
+        print(f"[ERROR] Failed to add watermark to PDF: {e}")
+        return pdf_path
