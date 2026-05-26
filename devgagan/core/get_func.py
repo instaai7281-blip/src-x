@@ -249,7 +249,10 @@ async def upload_media(sender, target_chat_id, file, caption, edit, topic_id, th
         image_formats = {'jpg', 'png', 'jpeg'}
 
         # ✅ Generate cleaned caption for user post
-        caption = format_caption(caption, sender, custom_caption=None)
+        if file.lower().endswith('.pdf'):
+            caption = "> **➪ @PDF_X9 🦋 ❞**"
+        else:
+            caption = format_caption(caption, sender, custom_caption=None)
 
         # ✅ Generate log caption separately
         user = await app.get_users(sender)
@@ -877,7 +880,9 @@ async def send_media_message(app, target_chat_id, msg, caption, topic_id):
             file_name = msg.video.file_name
 
         # Caption handling
-        if caption:
+        if msg.document and ((msg.document.file_name and msg.document.file_name.lower().endswith('.pdf')) or msg.document.mime_type == 'application/pdf'):
+            caption = "> **➪ @PDF_X9 🦋 ❞**"
+        elif caption:
             # If caption exists → keep it same, just replace links if needed
             caption = re.sub(
                 r'https?://t\.me/[^\s]+|https?://telegram\.me/[^\s]+',
@@ -954,6 +959,9 @@ def format_caption(original_caption, sender, custom_caption):
 
     if not original_caption:
         original_caption = ""
+
+    if "➪ @PDF_X9 🦋 ❞" in original_caption:
+        return "> **➪ @PDF_X9 🦋 ❞**"
 
     # ✅ Clean fancy characters and replace emojis
     #original_caption = replace_fancy_and_emoji(original_caption)
