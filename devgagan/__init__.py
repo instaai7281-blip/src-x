@@ -15,7 +15,10 @@
 print("DEBUG: devgagan/__init__.py started")
 import asyncio
 import logging
-import pyromod
+try:
+    import pyromod
+except ImportError:
+    print("WARNING: pyromod could not be imported on startup.")
 from pyrogram import Client
 from pyrogram.enums import ParseMode 
 from pyrogram.types import BotCommand
