@@ -89,7 +89,7 @@ async def token_handler(client, message):
                 InlineKeyboardButton("🤖 Add Me to Your PM", url="https://t.me/YourBotUsername?start=grp")
             ],
             [
-                InlineKeyboardButton("📢 Main Channel", url="https://t.me/II_LevelUP_II")
+                InlineKeyboardButton("📢 Main Channel", url="https://t.me/stolen_happines")
             ]
         ])
 
@@ -114,7 +114,7 @@ async def token_handler(client, message):
 
     if len(message.command) <= 1:
         image_url = "https://freeimage.host/i/F5dGOsj"  # must end with .jpg/.png etc.
-        join_button = InlineKeyboardButton("✈️ Main Channel", url="https://t.me/II_LevelUP_II")
+        join_button = InlineKeyboardButton("✈️ Main Channel", url="https://t.me/stolen_happines")
         premium = InlineKeyboardButton("🦋 Contact Owner", url="https://t.me/Chosen_One_x_bot")
         keyboard = InlineKeyboardMarkup([
             [join_button],
