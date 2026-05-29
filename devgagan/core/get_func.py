@@ -82,7 +82,7 @@ def clean_text_advanced(text, user_tag, delete_words=None, replacements=None):
     text = re.sub(r'[)}\]]', '〙', text)
     
     # Rebrand extraction markers
-    text = re.sub(r'(?i)(Extracted|Download|Upload|Forwarded)[\s_]*By[\s_:➤>–\-]*[^\n]*', r'<b>@PDF_X9</b>', text)
+    text = re.sub(r'(?i)(Extracted|Download|Upload|Forwarded)[\s_]*By[\s_:➤>–\-]*[^\n]*', r'<b>⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗</b>', text)
     
     if delete_words:
         for word in delete_words:
@@ -251,7 +251,7 @@ async def upload_media(sender, target_chat_id, file, caption, edit, topic_id, th
         # ✅ Generate cleaned caption for user post
         if file.lower().endswith('.pdf'):
             filename = os.path.basename(file)
-            caption = f"> **{filename}**\n\n> **➪ @PDF_X9 🦋 ❞**"
+            caption = f"> **{filename}**\n\n> **⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗**"
         else:
             caption = format_caption(caption, sender, custom_caption=None, filename=os.path.basename(file))
 
@@ -613,7 +613,7 @@ async def get_msg(userbot: TelegramClient, sender: int, edit_id: int, msg_link: 
 
         if file and str(file).lower().endswith('.pdf'):
             filename = os.path.basename(file)
-            caption = f"> **{filename}**\n\n> **➪ @PDF_X9 🦋 ❞**"
+            caption = f"> **{filename}**\n\n> **⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗**"
 
         # Apply PDF Watermark if applicable
         if file and str(file).lower().endswith('.pdf'):
@@ -789,7 +789,7 @@ async def get_final_caption(msg, sender):
     # ✅ Aggressive text cleanup: remove anything after an @mention or links entirely if they denote other sources
     # For captions, user asked to only retain their tag, removing any other mentions.
     # We replace any @mention with the custom renaming tag or a default if not set.
-    user_tag = custom_caption if custom_caption else '**➪ @PDF_X9 🦋 ❞**'
+    user_tag = custom_caption if custom_caption else '**⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗**'
     final_caption = re.sub(r'@\w+', user_tag, final_caption)
 
     # Replace all links with your channel link
@@ -896,8 +896,8 @@ async def copy_message_with_chat_id(app, userbot, sender, chat_id, message_id, e
             base_name, ext = os.path.splitext(clean_filename_base)
             if ext.lower() != '.pdf':
                 ext = '.pdf'
-            formatted_filename = f"{base_name.strip()} @PDF_X9{ext}".strip()
-            final_caption = f"> **{formatted_filename}**\n\n> **➪ @PDF_X9 🦋 ❞**"
+            formatted_filename = f"{base_name.strip()} ⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗{ext}".strip()
+            final_caption = f"> **{formatted_filename}**\n\n> **⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗**"
 
         topic_id = None
         if '/' in str(target_chat_id):
@@ -953,7 +953,7 @@ async def copy_message_with_chat_id(app, userbot, sender, chat_id, message_id, e
 
             if file and str(file).lower().endswith('.pdf'):
                 filename = os.path.basename(file)
-                final_caption = f"> **{filename}**\n\n> **➪ @PDF_X9 🦋 ❞**"
+                final_caption = f"> **{filename}**\n\n> **⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗**"
             file_size = os.path.getsize(file)
 
             if msg.photo:
@@ -1007,8 +1007,8 @@ async def send_media_message(app, target_chat_id, msg, caption, topic_id):
             base_name, ext = os.path.splitext(clean_filename_base)
             if ext.lower() != '.pdf':
                 ext = '.pdf'
-            formatted_filename = f"{base_name.strip()} @PDF_X9{ext}".strip()
-            caption = f"> **{formatted_filename}**\n\n> **➪ @PDF_X9 🦋 ❞**"
+            formatted_filename = f"{base_name.strip()} ⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗{ext}".strip()
+            caption = f"> **{formatted_filename}**\n\n> **⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗**"
         elif caption:
             # If caption exists → keep it same, just replace links if needed
             caption = re.sub(
@@ -1087,7 +1087,10 @@ def format_caption(original_caption, sender, custom_caption, filename=None):
     if not original_caption:
         original_caption = ""
 
-    if "➪ @PDF_X9 🦋 ❞" in original_caption:
+    original_caption = original_caption.replace("➪ @PDF_X9 🦋 ❞", "⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗")
+    original_caption = original_caption.replace("@PDF_X9", "⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗")
+
+    if "⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗" in original_caption:
         return original_caption
 
     # ✅ Clean fancy characters and replace emojis
@@ -1103,7 +1106,7 @@ def format_caption(original_caption, sender, custom_caption, filename=None):
     original_caption = re.sub(r'#\S+', '', original_caption)
 
     # ✅ Replace @mentions aggressively
-    user_tag = custom_caption if custom_caption else '**➪ @PDF_X9 🦋 ❞**'
+    user_tag = custom_caption if custom_caption else '**⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗**'
     original_caption = re.sub(r'@\w+', user_tag, original_caption)
 
     # ✅ Replace telegram links
@@ -1128,7 +1131,7 @@ def format_caption(original_caption, sender, custom_caption, filename=None):
     original_caption = re.sub(
         r'(📩)?\s*(Downloaded[\s_]*By)\s*[:➤>–\-]*\s*.*',
 
-        r'**➪ @PDF_X9 🦋 ❞**',
+        r'**⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗**',
         original_caption,
         flags=re.IGNORECASE
     )
@@ -1692,7 +1695,7 @@ async def rename_file(file, sender, caption=None):
     base_name, ext = os.path.splitext(filename)
     
     if ext and ext.lower() == '.pdf':
-        custom_rename_tag = '@PDF_X9'
+        custom_rename_tag = '⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗'
     
     ext = ext if ext and len(ext) <= 6 else ".mp4"
     original_base = base_name
