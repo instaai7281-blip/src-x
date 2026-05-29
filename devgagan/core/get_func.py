@@ -249,7 +249,7 @@ async def upload_media(sender, target_chat_id, file, caption, edit, topic_id, th
         image_formats = {'jpg', 'png', 'jpeg'}
 
         # ✅ Generate cleaned caption for user post
-        if file.lower().endswith('.pdf'):
+        if file.lower().endswith('.pdf') and not caption:
             filename = os.path.basename(file)
             caption = f"> **{filename}**\n\n> **⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗**"
         else:
@@ -611,7 +611,7 @@ async def get_msg(userbot: TelegramClient, sender: int, edit_id: int, msg_link: 
         # Rename file
         file = await rename_file(file, sender)
 
-        if file and str(file).lower().endswith('.pdf'):
+        if file and str(file).lower().endswith('.pdf') and not caption:
             filename = os.path.basename(file)
             caption = f"> **{filename}**\n\n> **⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗**"
 
@@ -883,7 +883,7 @@ async def copy_message_with_chat_id(app, userbot, sender, chat_id, message_id, e
         final_caption = format_caption(msg.caption or '', sender, custom_caption, filename=filename)
         
         # Force blockquote tag for PDF files
-        if msg.document and ((msg.document.file_name and msg.document.file_name.lower().endswith('.pdf')) or msg.document.mime_type == 'application/pdf'):
+        if msg.document and ((msg.document.file_name and msg.document.file_name.lower().endswith('.pdf')) or msg.document.mime_type == 'application/pdf') and not msg.caption:
             orig_filename = msg.document.file_name or "document.pdf"
             # Aggressively clean up original filename to remove others' tags
             clean_filename_base = re.sub(r'@\w+', '', orig_filename)
@@ -951,7 +951,7 @@ async def copy_message_with_chat_id(app, userbot, sender, chat_id, message_id, e
 
             file = await rename_file(file, sender)
 
-            if file and str(file).lower().endswith('.pdf'):
+            if file and str(file).lower().endswith('.pdf') and not msg.caption:
                 filename = os.path.basename(file)
                 final_caption = f"> **{filename}**\n\n> **⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗**"
             file_size = os.path.getsize(file)
@@ -994,7 +994,7 @@ async def send_media_message(app, target_chat_id, msg, caption, topic_id):
             file_name = msg.video.file_name
 
         # Caption handling
-        if msg.document and ((msg.document.file_name and msg.document.file_name.lower().endswith('.pdf')) or msg.document.mime_type == 'application/pdf'):
+        if msg.document and ((msg.document.file_name and msg.document.file_name.lower().endswith('.pdf')) or msg.document.mime_type == 'application/pdf') and not msg.caption:
             orig_filename = msg.document.file_name or "document.pdf"
             # Aggressively clean up original filename to remove others' tags
             clean_filename_base = re.sub(r'@\w+', '', orig_filename)
