@@ -252,8 +252,6 @@ async def upload_media(sender, target_chat_id, file, caption, edit, topic_id, th
         if file.lower().endswith('.pdf') and not caption:
             filename = os.path.basename(file)
             caption = f"> **{filename}**\n\n> **⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗**"
-        else:
-            caption = format_caption(caption, sender, custom_caption=None, filename=os.path.basename(file))
 
         # ✅ Generate log caption separately
         user = await app.get_users(sender)
