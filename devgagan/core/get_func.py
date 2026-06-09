@@ -48,12 +48,47 @@ CUSTOM_EMOJIS = ["🍁", "🍀", "👑", "✨", "🦋", "🌟", "💖"]
 
 # Enhanced cleaning utilities
 
+def remove_chaudhary_fancy(text):
+    if not text:
+        return text
+    
+    orig_indices = []
+    current_norm_idx = 0
+    for char in text:
+        norm_char = unicodedata.normalize("NFKC", char)
+        orig_indices.append((current_norm_idx, current_norm_idx + len(norm_char)))
+        current_norm_idx += len(norm_char)
+        
+    normalized_text = "".join(unicodedata.normalize("NFKC", char) for char in text)
+    matches = list(re.finditer(r'(?i)chaudhary', normalized_text))
+    if not matches:
+        return text
+        
+    match_indices = set()
+    for match in matches:
+        for idx in range(match.start(), match.end()):
+            match_indices.add(idx)
+            
+    cleaned_chars = []
+    for i, char in enumerate(text):
+        start_norm, end_norm = orig_indices[i]
+        if any(idx in match_indices for idx in range(start_norm, end_norm)):
+            continue
+        cleaned_chars.append(char)
+        
+    result = "".join(cleaned_chars)
+    result = re.sub(r'[ \t]+', ' ', result)
+    return result.strip()
+
 def clean_text_advanced(text, user_tag, delete_words=None, replacements=None):
     """Advanced text cleaning for captions and filenames.
     Removes unwanted branding, replaces mentions, stylizes brackets, and applies custom deletions/replacements.
     """
     if not text:
         return text
+    
+    # Clean Chaudhary fancy text first
+    text = remove_chaudhary_fancy(text)
     
     unwanted_phrases = [
         r'team[\s_\-\.]*jnc',
@@ -102,6 +137,9 @@ def clean_filename(text, user_tag=""):
     """
     if not text:
         return "file"
+    
+    # Clean Chaudhary fancy text first
+    text = remove_chaudhary_fancy(text)
     
     # Apply advanced cleaning without delete/replacements (just branding removal)
     text = clean_text_advanced(text, user_tag)
@@ -470,7 +508,7 @@ async def get_msg(userbot: TelegramClient, sender: int, edit_id: int, msg_link: 
 
         # Determine if we should try a fast copy or force download
         is_private = 't.me/c/' in msg_link or 't.me/b/' in msg_link or 'tg://openmessage' in msg_link
-        force_extraction = thumbnail(sender) or get_user_rename_preference(sender) != '⚝' or get_user_caption_preference(sender)
+        force_extraction = thumbnail(sender) or get_user_rename_preference(sender) != '⚝'
 
         # Set initial status message if not already set (e.g. by story/private link logic above)
         if not edit:
@@ -768,6 +806,9 @@ def get_message_file_size(msg):
 async def get_final_caption(msg, sender):
     # Get original caption in markdown if available
     original_caption = msg.caption.markdown if msg.caption else ""
+    
+    # Clean Chaudhary fancy text first
+    original_caption = remove_chaudhary_fancy(original_caption)
     
     # Add custom caption if present
     custom_caption = get_user_caption_preference(sender)
@@ -1112,6 +1153,9 @@ def format_caption(original_caption, sender, custom_caption, filename=None):
 
     if not original_caption:
         original_caption = ""
+
+    # Clean Chaudhary fancy text first
+    original_caption = remove_chaudhary_fancy(original_caption)
 
     original_caption = original_caption.replace("➪ @PDF_X9 🦋 ❞", "**🖤 Sᴛꪮʟᴇɴ Hᴀᴘᴘɪɴᴇss ⚝**")
     original_caption = original_caption.replace("@PDF_X9", "**🖤 Sᴛꪮʟᴇɴ Hᴀᴘᴘɪɴᴇss ⚝**")
@@ -1743,6 +1787,9 @@ async def rename_file(file, sender, caption=None):
 
     # Clean the base name
     base_name = os.path.basename(base_name)
+
+    # Clean Chaudhary fancy text first
+    base_name = remove_chaudhary_fancy(base_name)
 
     # Apply text transformations
     # Fully remove all other mentions so that only custom tag is present at the end

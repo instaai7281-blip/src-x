@@ -319,7 +319,9 @@ async def screenshot(video, duration, sender):
                 unique_seek_times.append(t)
                 
         out = f"thumb_{sender}_{int(time.time())}.jpg"
+        fallback_thumb = f"fallback_{out}"
         success = False
+        fallback_created = False
         
         for seek_time in unique_seek_times:
             time_stamp = hhmmss(seek_time)
@@ -370,6 +372,16 @@ async def screenshot(video, duration, sender):
                 if img is not None:
                     mean_val = img.mean()
                     print(f"[DEBUG] Generated thumbnail mean brightness: {mean_val:.2f}")
+                    
+                    # Store the first successfully read image as fallback
+                    if not fallback_created:
+                        import shutil
+                        try:
+                            shutil.copy2(out, fallback_thumb)
+                            fallback_created = True
+                        except Exception as e:
+                            print(f"[DEBUG] Failed to copy fallback thumb: {e}")
+                            
                     if mean_val >= 10.0:  # Not black!
                         success = True
                         break
@@ -387,14 +399,40 @@ async def screenshot(video, duration, sender):
                         pass
                         
         if success and os.path.isfile(out) and os.path.getsize(out) > 0:
+            if os.path.isfile(fallback_thumb):
+                try:
+                    os.remove(fallback_thumb)
+                except Exception:
+                    pass
             optimized_out = optimize_thumbnail(out)
             print(f"[SUCCESS] Thumbnail created and optimized: {optimized_out}")
+            return optimized_out
+        elif fallback_created and os.path.isfile(fallback_thumb) and os.path.getsize(fallback_thumb) > 0:
+            print(f"[WARNING] All screenshot attempts failed brightness threshold. Using fallback: {fallback_thumb}")
+            import shutil
+            try:
+                if os.path.isfile(out):
+                    os.remove(out)
+            except Exception:
+                pass
+            try:
+                shutil.move(fallback_thumb, out)
+            except Exception as e:
+                print(f"[ERROR] Failed to move fallback to out: {e}")
+                return None
+            optimized_out = optimize_thumbnail(out)
+            print(f"[SUCCESS] Fallback thumbnail created and optimized: {optimized_out}")
             return optimized_out
         else:
             print(f"[ERROR] All screenshot attempts failed or generated black frames for: {video}")
             if os.path.isfile(out):
                 try:
                     os.remove(out)
+                except Exception:
+                    pass
+            if os.path.isfile(fallback_thumb):
+                try:
+                    os.remove(fallback_thumb)
                 except Exception:
                     pass
             return None
