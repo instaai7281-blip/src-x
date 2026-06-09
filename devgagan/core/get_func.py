@@ -115,7 +115,7 @@ def clean_filename(text, user_tag=""):
         if not unicodedata.category(char).startswith('S')
         and not unicodedata.category(char).startswith('C')
         and not unicodedata.category(char).startswith('P')
-        or char in ['.', '-', '_', '〘', '〙', '⛥']
+        or char in ['.', '-', '_', '〘', '〙', '⛥', '⚝']
     )
     
     # Normalize spaces, dashes, underscores
@@ -820,6 +820,12 @@ async def get_final_caption(msg, sender):
     for word, replace_word in replacements.items():
         final_caption = final_caption.replace(word, replace_word)
 
+    if final_caption:
+        final_caption = final_caption.replace("[", "〘").replace("]", "〙")
+        final_caption = final_caption.replace("(", "〘").replace(")", "〙")
+        final_caption = final_caption.replace("📕", "📓")
+        final_caption = final_caption.replace("📽️", "🍀")
+
     return final_caption.strip() if final_caption else None
 
 
@@ -1166,7 +1172,7 @@ def format_caption(original_caption, sender, custom_caption, filename=None):
         original_caption = original_caption.replace(old, new)
 
     # ✅ Symbol replacements
-    original_caption = original_caption.replace("[", "〘").replace("]", "〙")
+    original_caption = original_caption.replace("[", "〘").replace("]", "〙").replace("(", "〘").replace(")", "〙")
     original_caption = original_caption.replace("📕", "📓")
     original_caption = original_caption.replace("📽️", "🍀")
 
