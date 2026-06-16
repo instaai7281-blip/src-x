@@ -64,16 +64,27 @@ else:
 # Global Semaphore for concurrency control
 task_semaphore = asyncio.Semaphore(MAX_CONCURRENT_TASKS)
 
-from telethon.sync import TelegramClient
-from telethon.network import ConnectionTcpIntermediate
+import os
+# Stale session cleanup to prevent DC migration hang
+for suffix in ["", "-journal"]:
+    path = f"sexrepo.session{suffix}"
+    if os.path.exists(path):
+        try:
+            os.remove(path)
+            print(f"Removed stale session file: {path}")
+        except Exception as e:
+            print(f"Failed to remove stale session file {path}: {e}")
+
+from telethon import TelegramClient
+from telethon.network import ConnectionTcpObfuscated
 sex = TelegramClient(
     'sexrepo', 
     API_ID, 
     API_HASH,
-    connection=ConnectionTcpIntermediate,
+    connection=ConnectionTcpObfuscated,
     connection_retries=15,
     retry_delay=5
-).start(bot_token=BOT_TOKEN)
+)
 
 
 # MongoDB setup
@@ -99,6 +110,14 @@ async def restrict_bot():
     except Exception as e:
         print(f"❌ Database Setup Error: {e}")
         print("Continuing without TTL index optimization...")
+    
+    print("Starting Telethon Client (sex)...")
+    try:
+        await sex.start(bot_token=BOT_TOKEN)
+        print("Telethon Client (sex) started successfully!")
+    except Exception as e:
+        print(f"❌ Telethon Client start failed: {e}")
+
     await app.start()
     getme = await app.get_me()
     BOT_ID = getme.id
