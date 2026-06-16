@@ -65,7 +65,15 @@ else:
 task_semaphore = asyncio.Semaphore(MAX_CONCURRENT_TASKS)
 
 from telethon.sync import TelegramClient
-sex = TelegramClient('sexrepo', API_ID, API_HASH).start(bot_token=BOT_TOKEN)
+from telethon.network import ConnectionTcpIntermediate
+sex = TelegramClient(
+    'sexrepo', 
+    API_ID, 
+    API_HASH,
+    connection=ConnectionTcpIntermediate,
+    connection_retries=15,
+    retry_delay=5
+).start(bot_token=BOT_TOKEN)
 
 
 # MongoDB setup

@@ -19,7 +19,7 @@ import gc
 import os
 import re
 from typing import Callable
-from devgagan import app, get_client
+from devgagan import app, get_client, task_semaphore
 import aiofiles
 from devgagan import sex as gf
 from telethon.tl.types import DocumentAttributeVideo, Message
@@ -421,6 +421,7 @@ async def upload_media(sender, target_chat_id, file, caption, edit, topic_id, th
 
 
 async def get_msg(userbot: TelegramClient, sender: int, edit_id: int, msg_link: str, i: int = 0, message: Message = None):
+    await task_semaphore.acquire()
     try:
         # If edit_id is None (e.g. in batch mode), create a temporary message to act as edit message
         edit = ''
@@ -624,9 +625,14 @@ async def get_msg(userbot: TelegramClient, sender: int, edit_id: int, msg_link: 
 
         # Download media
         try:
+            # unique directory for each user to prevent concurrency collisions
+            temp_dir = os.path.join("downloads", str(sender))
+            os.makedirs(temp_dir, exist_ok=True)
+            target_file_path = os.path.join(temp_dir, file_name)
+            
             file = await client.download_media(
                 msg,
-                file_name=file_name,            
+                file_name=target_file_path,            
                 progress_args=("╔══━⚡️ Downloading ⚡️━══╗\n", edit, time.time()),
                 progress=progress_bar
             )
@@ -720,9 +726,16 @@ async def get_msg(userbot: TelegramClient, sender: int, edit_id: int, msg_link: 
     finally:
         # Clean up
         if file and os.path.exists(file):
-            os.remove(file)
+            try:
+                os.remove(file)
+            except Exception:
+                pass
         if edit:
-            await edit.delete(1)
+            try:
+                await edit.delete(1)
+            except Exception:
+                pass
+        task_semaphore.release()
         
 async def clone_message(app, msg, target_chat_id, topic_id, edit_id, log_group):
     edit = None
@@ -882,7 +895,12 @@ async def download_user_stories(userbot, chat_id, msg_id, edit, sender):
             await edit.edit("The story doesn't contain any media.")
             return
         await edit.edit("Downloading Story...")
-        file_path = await userbot.download_media(story)
+        
+        # unique directory for each user to prevent concurrency collisions
+        temp_dir = os.path.join("downloads", str(sender))
+        os.makedirs(temp_dir, exist_ok=True)
+        
+        file_path = await userbot.download_media(story, file_name=temp_dir)
         print(f"Story downloaded: {file_path}")
         # Send the downloaded story based on its type
         if story.media:
@@ -1008,8 +1026,14 @@ async def copy_message_with_chat_id(app, userbot, sender, chat_id, message_id, e
             filename = await get_media_filename(msg)
             final_caption = format_caption(msg.caption.markdown if msg.caption else "", sender, custom_caption, filename=filename)
             
+            # unique directory for each user to prevent concurrency collisions
+            temp_dir = os.path.join("downloads", str(sender))
+            os.makedirs(temp_dir, exist_ok=True)
+            target_file_path = os.path.join(temp_dir, filename)
+
             file = await userbot.download_media(
                 msg,
+                file_name=target_file_path,
                 progress=progress_bar,
                 progress_args=("╭─────────────────────╮\n│      **__Downloading__...**\n├─────────────────────", edit, time.time())
             )
