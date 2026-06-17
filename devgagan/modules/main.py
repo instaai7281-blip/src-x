@@ -140,7 +140,8 @@ async def initialize_userbot(user_id): # this ensure the single startup .. even 
                 device_model=device,
                 session_string=data.get("session"),
                 in_memory=True,
-                no_updates=True
+                no_updates=True,
+                max_concurrent_transmissions=16
             )
             await userbot.start()
             return userbot
