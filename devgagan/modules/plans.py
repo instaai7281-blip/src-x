@@ -46,32 +46,40 @@ async def remove_premium(client, message):
         if data and data.get("_id"):
             await plans_db.remove_premium(user_id)
             await message.reply_text(
+                f"⚙️ 🖤 **𝗦𝗧𝗢𝗟𝗘𝗡 𝗛𝗔𝗣𝗣𝗜𝗡𝗘𝗦𝗦** 🖤 ⚙️\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
                 f"🗑️ **PREMIUM ACCESS REVOKED**\n"
-                f"╭───────────────────────────╮\n"
-                f"  👤 **User:** {user_mention}\n"
-                f"  ⚡ **ID:** `{user_id}`\n"
-                f"  ❌ **Status:** Premium access terminated.\n"
-                f"╰───────────────────────────╯"
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                f"👤 **User:** {user_mention}\n"
+                f"🆔 **ID:** `{user_id}`\n"
+                f"❌ **Status:** Premium access terminated.\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             )
             try:
                 await client.send_message(
                     chat_id=user_id,
                     text=(
-                        f"⚠️ **NOTICE: PREMIUM TERMINATED**\n"
-                        f"╭───────────────────────────╮\n"
-                        f"  Your premium subscription access \n"
-                        f"  has been terminated/expired.\n"
-                        f"╰───────────────────────────╯\n"
-                        f"💬 Contact owner if you think this is a mistake."
+                        f"⚠️ **NOTICE: PREMIUM EXPIRED/TERMINATED** ⚠️\n"
+                        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                        f"Hello, your premium subscription for \n"
+                        f"🖤 **Sᴛꪮʟᴇɴ Hᴀᴘᴘɪɴᴇss ⚝** has been terminated or expired.\n\n"
+                        f"💬 If you think this is a mistake or wish to renew, please contact the owner.\n"
+                        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
                     )
                 )
             except Exception:
                 pass
         else:
-            await message.reply_text("🤷 **Pointless.**\n\nThis user was never premium. Why bother?")
+            await message.reply_text(
+                f"🤷 **Pointless!**\n\n"
+                f"This user is not a premium member. No action taken."
+            )
     else:
-        await message.reply_text("💤 **Boring.**\n\nUsage: `/rem user_id`\n*(Try getting it right next time.)*")
-
+        await message.reply_text(
+            f"💤 **Boring...**\n\n"
+            f"Usage: `/rem user_id`\n"
+            f"_(Try getting it right next time!)_"
+        )
 
 
 @app.on_message(filters.command("myplan"))
@@ -93,16 +101,23 @@ async def myplan(client, message):
             
         time_left_str = f"{days} days, {hours} hours, {minutes} minutes"
         await message.reply_text(
-            f"⚜️ **YOUR PREMIUM STATUS** ⚜️\n"
-            f"╭───────────────────────────╮\n"
-            f"  👤 **User:** {user}\n"
-            f"  ⚡ **ID:** `{user_id}`\n"
-            f"  ⏰ **Remaining:** {time_left_str}\n"
-            f"  ⌛ **Expiry:** {expiry_str_in_ist} (IST)\n"
-            f"╰───────────────────────────╯"
+            f"✨ 🖤 **𝗦𝗧𝗢𝗟𝗘𝗡 𝗛𝗔𝗣𝗣𝗜𝗡𝗘𝗦𝗦** 🖤 ✨\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"👑 **YOUR PREMIUM STATUS** 👑\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"👤 **User:** {user}\n"
+            f"🆔 **ID:** `{user_id}`\n"
+            f"⏰ **Time Left:** `{time_left_str}`\n"
+            f"⌛ **Expiry:** `{expiry_str_in_ist}` (IST)\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"🚀 _Thank you for being a premium member!_"
         )   
     else:
-        await message.reply_text(f"ʜᴇʏ {user},\n\nʏᴏᴜ ᴅᴏ ɴᴏᴛ ʜᴀᴠᴇ ᴀɴʏ ᴀᴄᴛɪᴠᴇ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴs")
+        await message.reply_text(
+            f"👋 Hey {user},\n\n"
+            f"❌ **You do not have any active Premium plan.**\n\n"
+            f"Subscribe to premium to enjoy maximum speeds, custom thumbnails, and more! 🚀"
+        )
         
 
 
@@ -138,18 +153,23 @@ async def get_premium(client, message):
             
             time_left_str = f"{days} days, {hours} hours, {minutes} minutes"
             await message.reply_text(
-                f"⚜️ **PREMIUM USER DETAILS** ⚜️\n"
-                f"╭───────────────────────────╮\n"
-                f"  👤 **User:** {user_mention}\n"
-                f"  ⚡ **ID:** `{user_id}`\n"
-                f"  ⏰ **Remaining:** {time_left_str}\n"
-                f"  ⌛ **Expiry:** {expiry_str_in_ist} (IST)\n"
-                f"╰───────────────────────────╯"
+                f"🔍 🖤 **𝗦𝗧𝗢𝗟𝗘𝗡 𝗛𝗔𝗣𝗣𝗜𝗡𝗘𝗦𝗦** 🖤 🔍\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                f"👑 **PREMIUM USER DETAILS** 👑\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                f"👤 **User:** {user_mention}\n"
+                f"🆔 **ID:** `{user_id}`\n"
+                f"⏰ **Remaining:** `{time_left_str}`\n"
+                f"⌛ **Expiry:** `{expiry_str_in_ist}` (IST)\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             )
         else:
-            await message.reply_text("ɴᴏ ᴀɴʏ ᴘʀᴇᴍɪᴜᴍ ᴅᴀᴛᴀ ᴏꜰ ᴛʜᴇ ᴡᴀꜱ ꜰᴏᴜɴᴅ ɪɴ ᴅᴀᴛᴀʙᴀꜱᴇ !")
+            await message.reply_text(
+                f"❌ **No Premium Data Found!**\n\n"
+                f"User `{user_id}` is not registered as a premium user in the database."
+            )
     else:
-        await message.reply_text("ᴜꜱᴀɢᴇ : /check user_id")
+        await message.reply_text("Usage: `/check user_id`")
 
 
 @app.on_message(filters.command("add") & filters.user(OWNER_ID))
@@ -182,14 +202,16 @@ async def give_premium_cmd_handler(client, message):
             expiry = data.get("expire_date")   
             expiry_str_in_ist = expiry.astimezone(pytz.timezone("Asia/Kolkata")).strftime("%d-%m-%Y %I:%M:%S %p")         
             await message.reply_text(
+                f"✨ 🖤 **𝗦𝗧𝗢𝗟𝗘𝗡 𝗛𝗔𝗣𝗣𝗜𝗡𝗘𝗦𝗦** 🖤 ✨\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
                 f"🌟 **PREMIUM ACCESS ACTIVATED** 🌟\n"
-                f"╭───────────────────────────╮\n"
-                f"  👤 **User:** {user_mention}\n"
-                f"  ⚡ **ID:** `{user_id}`\n"
-                f"  ⏰ **Duration:** `{time_val}`\n"
-                f"  📅 **Start:** {current_time} (IST)\n"
-                f"  ⏳ **Expiry:** {expiry_str_in_ist} (IST)\n"
-                f"╰───────────────────────────╯\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                f"👤 **User:** {user_mention}\n"
+                f"🆔 **ID:** `{user_id}`\n"
+                f"⏳ **Duration:** `{time_val}`\n"
+                f"📅 **Start:** `{current_time}` (IST)\n"
+                f"⌛ **Expiry:** `{expiry_str_in_ist}` (IST)\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
                 f"✨ _Powered by CHOSEN ONE ⚝_", 
                 disable_web_page_preview=True
             )
@@ -197,15 +219,20 @@ async def give_premium_cmd_handler(client, message):
                 await client.send_message(
                     chat_id=user_id,
                     text=(
-                        f"✨ **CONGRATULATIONS! PREMIUM ACTIVATED** ✨\n"
-                        f"╭───────────────────────────╮\n"
-                        f"  👋 Hey {user_name},\n"
-                        f"  Thank you for purchasing premium!\n"
-                        f"  Your account has been upgraded. Enjoy! 🎉\n\n"
-                        f"  ⏰ **Duration:** `{time_val}`\n"
-                        f"  📅 **Joined:** {current_time} (IST)\n"
-                        f"  ⏳ **Expiry:** {expiry_str_in_ist} (IST)\n"
-                        f"╰───────────────────────────╯\n"
+                        f"🎉 **CONGRATULATIONS! PREMIUM ACTIVATED** 🎉\n"
+                        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                        f"👋 Hey {user_name},\n"
+                        f"Thank you for supporting 🖤 **Sᴛꪮʟᴇɴ Hᴀᴘᴘɪɴᴇss ⚝**!\n"
+                        f"Your account has been upgraded to Premium status. Enjoy! 👑\n\n"
+                        f"⚡ **BENEFITS ACTIVATED:**\n"
+                        f"  • Max download & upload speed 🚀\n"
+                        f"  • Access to restricted content bypass 🔥\n"
+                        f"  • Custom thumbnail support 📸\n"
+                        f"  • Parallel transmission chunks ⚡\n\n"
+                        f"📈 **YOUR PLAN DETAILS:**\n"
+                        f"  • **Duration:** `{time_val}`\n"
+                        f"  • **Expiry Time:** `{expiry_str_in_ist}` (IST)\n"
+                        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
                         f"🚀 _Enjoy the maximum speed & limit!_"
                     ), 
                     disable_web_page_preview=True              
@@ -222,57 +249,75 @@ async def give_premium_cmd_handler(client, message):
 @app.on_message(filters.command("transfer"))
 async def transfer_premium(client, message):
     if len(message.command) == 2:
-        new_user_id = int(message.command[1])  # The user ID to whom premium is transferred
-        sender_user_id = message.from_user.id  # The current premium user issuing the command
-        sender_user = await client.get_users(sender_user_id)
-        new_user = await client.get_users(new_user_id)
+        try:
+            new_user_id = int(message.command[1])
+        except ValueError:
+            await message.reply_text("❌ **Invalid user ID.** Please provide a numeric ID.")
+            return
+
+        sender_user_id = message.from_user.id
         
-        # Fetch sender's premium plan details
+        sender_mention = f"User (`{sender_user_id}`)"
+        new_mention = f"User (`{new_user_id}`)"
+        
+        try:
+            sender_user = await client.get_users(sender_user_id)
+            if sender_user:
+                sender_mention = sender_user.mention
+        except Exception:
+            pass
+            
+        try:
+            new_user = await client.get_users(new_user_id)
+            if new_user:
+                new_mention = new_user.mention
+        except Exception:
+            pass
+        
         data = await plans_db.check_premium(sender_user_id)
         
-        if data and data.get("_id"):  # Verify sender is already a premium user
+        if data and data.get("_id"):
             expiry = data.get("expire_date")  
             
-            # Remove premium for the sender
             await plans_db.remove_premium(sender_user_id)
-            
-            # Add premium for the new user with the same expiry date
             await plans_db.add_premium(new_user_id, expiry)
             
-            # Convert expiry date to IST format for display
             expiry_str_in_ist = expiry.astimezone(pytz.timezone("Asia/Kolkata")).strftime(
                 "%d-%m-%Y %I:%M:%S %p"
             )
             time_zone = datetime.datetime.now(pytz.timezone("Asia/Kolkata"))
             current_time = time_zone.strftime("%d-%m-%Y %I:%M:%S %p")
             
-            # Confirmation message to the sender
             await message.reply_text(
+                f"🔄 🖤 **𝗦𝗧𝗢𝗟𝗘𝗡 𝗛𝗔𝗣𝗣𝗜𝗡𝗘𝗦𝗦** 🖤 🔄\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
                 f"🔄 **PREMIUM PLAN TRANSFERRED**\n"
-                f"╭───────────────────────────╮\n"
-                f"  👤 **From:** {sender_user.mention}\n"
-                f"  👤 **To:** {new_user.mention}\n"
-                f"  📅 **Transferred:** {current_time} (IST)\n"
-                f"  ⏳ **Expiry:** {expiry_str_in_ist} (IST)\n"
-                f"╰───────────────────────────╯\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                f"👤 **From:** {sender_mention}\n"
+                f"👤 **To:** {new_mention}\n"
+                f"📅 **Transferred:** `{current_time}` (IST)\n"
+                f"⏳ **Expiry:** `{expiry_str_in_ist}` (IST)\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
                 f"✨ _Powered by CHOSEN ONE ⚝_"
             )
             
-            # Notification to the new user
-            await client.send_message(
-                chat_id=new_user_id,
-                text=(
-                    f"🎉 **PREMIUM PLAN RECEIVED** 🎉\n"
-                    f"╭───────────────────────────╮\n"
-                    f"  👋 Hey {new_user.mention},\n"
-                    f"  A premium plan has been transferred to you!\n\n"
-                    f"  🛡️ **From:** {sender_user.mention}\n"
-                    f"  ⏳ **Expiry:** {expiry_str_in_ist} (IST)\n"
-                    f"  📅 **Date:** {current_time} (IST)\n"
-                    f"╰───────────────────────────╯\n"
-                    f"🚀 _Enjoy the unlimited speed and features!_"
+            try:
+                await client.send_message(
+                    chat_id=new_user_id,
+                    text=(
+                        f"🎉 **PREMIUM PLAN RECEIVED** 🎉\n"
+                        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                        f"👋 Hey {new_mention},\n"
+                        f"A premium subscription has been transferred to you!\n\n"
+                        f"🛡️ **From:** {sender_mention}\n"
+                        f"📅 **Date:** `{current_time}` (IST)\n"
+                        f"⏳ **Expiry:** `{expiry_str_in_ist}` (IST)\n"
+                        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                        f"🚀 _Enjoy the unlimited speed and features!_"
+                    )
                 )
-            )
+            except Exception:
+                pass
         else:
             await message.reply_text("⚠️ **You are not a Premium user!**\n\nOnly Premium users can transfer their plans.")
     else:
@@ -295,7 +340,20 @@ async def premium_remover():
                 if expiry_date <= datetime.datetime.now():
                     name = user.first_name
                     await plans_db.remove_premium(user_id)
-                    await app.send_message(user_id, text=f"Hello {name}, your premium subscription has expired.")
+                    try:
+                        await app.send_message(
+                            user_id, 
+                            text=(
+                                f"⚠️ **NOTICE: PREMIUM EXPIRED** ⚠️\n"
+                                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                                f"Hello {name},\n"
+                                f"Your subscription for 🖤 **Sᴛꪮʟᴇɴ Hᴀᴘᴘɪɴᴇss ⚝** has expired.\n\n"
+                                f"Thank you for being with us! If you wish to renew, please contact the owner.\n"
+                                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                            )
+                        )
+                    except Exception:
+                        pass
                     print(f"{name}, your premium subscription has expired.")
                     removed_users.append(f"{name} ({user_id})")
                 else:
