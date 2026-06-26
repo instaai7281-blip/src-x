@@ -1381,7 +1381,6 @@ get_user_rename_preference = lambda user_id: user_rename_preferences.get(str(use
 
 # --- Branding Tag Selection ---
 BRANDING_TAGS = {
-    "justforyou": "⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗",
     "stolenhappiness": "🖤 Sᴛꪮʟᴇɴ Hᴀᴘᴘɪɴᴇss ⚝",
 }
 DEFAULT_BRANDING_TAG = "🖤 Sᴛꪮʟᴇɴ Hᴀᴘᴘɪɴᴇss ⚝"
@@ -1500,7 +1499,6 @@ async def callback_query_handler(event):
     elif data == 'settag':
         current_tag = get_user_branding_tag(user_id)
         tag_buttons = [
-            [Button.inline(f"⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗 {'✅' if 'Just' in current_tag or '𝗝𝘂𝘀𝘁' in current_tag else ''}", b'tag_justforyou')],
             [Button.inline(f"🖤 Sᴛꪮʟᴇɴ Hᴀᴘᴘɪɴᴇss ⚝ {'✅' if 'Sᴛꪮʟᴇɴ' in current_tag else ''}", b'tag_stolenhappiness')],
             [Button.inline("✏️ Custom Tag (Type your own)", b'tag_custom')],
         ]
@@ -1510,11 +1508,6 @@ async def callback_query_handler(event):
             f"This tag appears in your captions and PDF files.",
             buttons=tag_buttons
         )
-
-    elif data == 'tag_justforyou':
-        tag = BRANDING_TAGS["justforyou"]
-        set_user_branding_tag(user_id, tag)
-        await event.edit(f"✅ Branding tag set to:\n\n**{tag}**")
 
     elif data == 'tag_stolenhappiness':
         tag = BRANDING_TAGS["stolenhappiness"]

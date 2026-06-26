@@ -84,7 +84,6 @@ def get_cleaning_keyboard(user_data):
 def get_tag_keyboard(user_data):
     current_tag = user_data.get("branding_tag", "🖤 Sᴛꪮʟᴇɴ Hᴀᴘᴘɪɴᴇss ⚝")
     buttons = [
-        [InlineKeyboardButton(f"⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗 {'✅' if 'Just' in current_tag or '𝗝𝘂𝘀𝘁' in current_tag else ''}", callback_data="set_tag_justforyou")],
         [InlineKeyboardButton(f"🖤 Sᴛꪮʟᴇɴ Hᴀᴘᴘɪɴᴇss ⚝ {'✅' if 'Sᴛꪮʟᴇɴ' in current_tag else ''}", callback_data="set_tag_stolenhappiness")],
         [InlineKeyboardButton("✏️ Custom Tag (Type your own)", callback_data="set_tag_custom")],
         [InlineKeyboardButton("🔙 Back to Menu", callback_data="back_to_main")]
@@ -319,17 +318,12 @@ async def cleaning_actions_callback(client, callback_query: CallbackQuery):
 
 # ────── Branding Tag Actions ──────
 
-@app.on_callback_query(filters.regex(r"^(set_tag_justforyou|set_tag_stolenhappiness|set_tag_custom)$"))
+@app.on_callback_query(filters.regex(r"^(set_tag_stolenhappiness|set_tag_custom)$"))
 async def tag_actions_callback(client, callback_query: CallbackQuery):
     data = callback_query.data
     user_id = callback_query.from_user.id
 
-    if data == "set_tag_justforyou":
-        tag = "⚝ 𝗝𝘂𝘀𝘁 𝗙ꪮ𝗿 𝗬ꪮ𝘂...💗"
-        await db.update_data(user_id, {"branding_tag": tag})
-        await callback_query.answer("Branding tag set to Just For You...💗")
-        
-    elif data == "set_tag_stolenhappiness":
+    if data == "set_tag_stolenhappiness":
         tag = "🖤 Sᴛꪮʟᴇɴ Hᴀᴘᴘɪɴᴇss ⚝"
         await db.update_data(user_id, {"branding_tag": tag})
         await callback_query.answer("Branding tag set to Stolen Happiness")
