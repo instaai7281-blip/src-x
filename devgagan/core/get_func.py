@@ -283,6 +283,44 @@ async def fetch_upload_method(user_id):
     return user_data.get("upload_method", "Pyrogram") if user_data else "Pyrogram"
 
 
+async def check_and_auto_forward(sender, message_or_file, caption=None, reply_markup=None, attributes=None, thumb_path=None, client_to_use=None):
+    try:
+        from devgagan.core.mongo.db import get_forward_mapping
+        target_dest = await get_forward_mapping(sender)
+        if not target_dest:
+            return
+            
+        dest_chat_id = target_dest
+        dest_topic_id = None
+        if '/' in str(target_dest):
+            try:
+                parts = str(target_dest).split('/', 1)
+                dest_chat_id = int(parts[0])
+                dest_topic_id = int(parts[1])
+            except Exception:
+                pass
+                
+        from pyrogram.types import Message as PyMessage
+        if isinstance(message_or_file, PyMessage):
+            await message_or_file.copy(
+                chat_id=dest_chat_id,
+                reply_to_message_id=dest_topic_id,
+                caption=caption
+            )
+        else:
+            if client_to_use:
+                await client_to_use.send_file(
+                    dest_chat_id,
+                    message_or_file,
+                    caption=caption,
+                    attributes=attributes,
+                    reply_to=dest_topic_id,
+                    thumb=thumb_path
+                )
+    except Exception as e:
+        print(f"Auto-forward helper failed: {e}")
+
+
 def format_caption_to_html(caption: str) -> str:
     if not caption:
         return None
@@ -460,6 +498,7 @@ async def upload_media(sender, target_chat_id, file, caption, edit, topic_id, th
 
             # ✅ Fast log: copy already-uploaded message instead of re-uploading from disk
             log_file_msg = await dm.copy(LOG_GROUP)
+            await check_and_auto_forward(sender, dm, caption=caption)
 
             # ✅ Send log info separately as reply to log file
             await app.send_message(
@@ -517,6 +556,15 @@ async def upload_media(sender, target_chat_id, file, caption, edit, topic_id, th
                 caption=log_caption,
                 attributes=attributes,
                 thumb=thumb_path
+            )
+
+            await check_and_auto_forward(
+                sender=sender,
+                message_or_file=uploaded,
+                caption=caption_html,
+                attributes=attributes,
+                thumb_path=thumb_path,
+                client_to_use=gf
             )
 
     except Exception as e:
@@ -788,12 +836,14 @@ async def get_msg(userbot: TelegramClient, sender: int, edit_id: int, msg_link: 
                 return
             result = await app.send_audio(target_chat_id, file, caption=caption, reply_to_message_id=topic_id)
             await result.copy(LOG_GROUP)
+            await check_and_auto_forward(sender, result, caption=caption)
             await edit.delete(1)
             return
         
         if msg.voice:
             result = await app.send_voice(target_chat_id, file, reply_to_message_id=topic_id)
             await result.copy(LOG_GROUP)
+            await check_and_auto_forward(sender, result)
             await edit.delete(1)
             return
 
@@ -802,6 +852,7 @@ async def get_msg(userbot: TelegramClient, sender: int, edit_id: int, msg_link: 
                 return
             result = await app.send_photo(target_chat_id, file, caption=None, reply_to_message_id=topic_id)
             await result.copy(LOG_GROUP)
+            await check_and_auto_forward(sender, result)
             await edit.delete(1)
             return
 
