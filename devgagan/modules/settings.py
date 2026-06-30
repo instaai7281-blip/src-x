@@ -287,17 +287,30 @@ async def chatid_actions_callback(client, callback_query: CallbackQuery):
         await callback_query.answer("Auto-forward reset to DM", show_alert=True)
     elif data == "set_new_chatid":
         await callback_query.message.delete()
-        ask = await client.ask(user_id, "📢 **Send the Channel or Group ID.**\n\n> Example: `-100123456789` or forward a message from that chat.\n> Send /cancel to abort.")
+        ask = await client.ask(
+            user_id,
+            "📢 **Send the Channel, Group ID, or Message Link.**\n\n"
+            "> **Examples:**\n"
+            "> • `-100123456789` (Plain ID)\n"
+            "> • `https://t.me/c/123456789/430/431` (Message link with Topic ID)\n\n"
+            "> Send /cancel to abort."
+        )
         
         if ask.text == "/cancel":
             await ask.reply("Action cancelled.")
         else:
+            val = ask.text.strip()
+            from devgagan.core.get_func import parse_target_chat
+            parsed_chat = parse_target_chat(val)
+            
+            chat_to_save = parsed_chat
             try:
-                chat_id = int(ask.text)
-                await db.set_channel(user_id, chat_id)
-                await ask.reply(f"✅ **Auto-forward set to:** `{chat_id}`")
+                chat_to_save = int(parsed_chat)
             except ValueError:
-                await ask.reply("❌ **Invalid Chat ID format. Make sure it's a number starting with -100.**")
+                pass
+                
+            await db.set_channel(user_id, chat_to_save)
+            await ask.reply(f"✅ **Auto-forward set to:** `{chat_to_save}`")
         
         await asyncio.sleep(0.5)
         await settings_command(client, ask)

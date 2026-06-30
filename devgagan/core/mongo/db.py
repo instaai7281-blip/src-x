@@ -66,9 +66,9 @@ async def remove_clean_words(user_id, words_to_remove):
 async def set_channel(user_id, chat_id):
     data = await get_data(user_id)
     if data and data.get("_id"):
-        await db.update_one({"_id": user_id}, {"$set": {"chat_id": chat_id}})
+        await db.update_one({"_id": user_id}, {"$set": {"chat_id": chat_id, "target_chat_id": chat_id}})
     else:
-        await db.insert_one({"_id": user_id, "chat_id": chat_id})
+        await db.insert_one({"_id": user_id, "chat_id": chat_id, "target_chat_id": chat_id})
 async def all_words_remove(user_id):
     await db.update_one({"_id": user_id}, {"$set": {"clean_words": None}})
 async def remove_thumbnail(user_id):
@@ -81,7 +81,7 @@ async def remove_replace(user_id):
 async def remove_session(user_id):
     await db.update_one({"_id": user_id}, {"$set": {"session": None}})
 async def remove_channel(user_id):
-    await db.update_one({"_id": user_id}, {"$set": {"chat_id": None}})
+    await db.update_one({"_id": user_id}, {"$set": {"chat_id": None, "target_chat_id": None}})
 async def set_filter(user_id, media_type, status):
     data = await get_data(user_id)
     if data and data.get("_id"):

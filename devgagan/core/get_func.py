@@ -283,6 +283,51 @@ async def fetch_upload_method(user_id):
     return user_data.get("upload_method", "Pyrogram") if user_data else "Pyrogram"
 
 
+def parse_target_chat(input_str):
+    if not input_str:
+        return None
+    input_str = input_str.strip()
+    
+    # Check if it is a Telegram link
+    if "t.me/" in input_str or "telegram.me/" in input_str or "telegram.dog/" in input_str:
+        # Clean protocol
+        link = re.sub(r'https?://', '', input_str)
+        # Clean domain
+        link = re.sub(r'^(?:www\.)?(?:t\.me|telegram\.me|telegram\.dog)/', '', link)
+        # parts: e.g. c/2407156919/430/431
+        parts = [p for p in link.split('/') if p]
+        
+        if not parts:
+            return input_str
+            
+        if parts[0] == 'c':
+            # Private chat link
+            if len(parts) >= 2:
+                chat_id_str = parts[1]
+                if not chat_id_str.startswith("-100"):
+                    chat_id_str = "-100" + chat_id_str
+                
+                # Check for topic ID
+                if len(parts) >= 4:
+                    topic_id = parts[2]
+                    return f"{chat_id_str}/{topic_id}"
+                else:
+                    return chat_id_str
+        else:
+            # Public username link
+            chat_username = parts[0]
+            if not chat_username.startswith("@"):
+                chat_username = "@" + chat_username
+                
+            if len(parts) >= 3:
+                topic_id = parts[1]
+                return f"{chat_username}/{topic_id}"
+            else:
+                return chat_username
+                
+    return input_str
+
+
 async def check_and_auto_forward(sender, message_or_file, caption=None, reply_markup=None, attributes=None, thumb_path=None, client_to_use=None):
     try:
         from devgagan.core.mongo.db import get_forward_mapping
@@ -1932,12 +1977,16 @@ async def handle_user_input(event):
 
         if session_type == 'setchat':
             try:
-                chat_id = event.text
+                chat_id = event.text.strip()
+                parsed_chat = parse_target_chat(chat_id)
+                if parsed_chat:
+                    chat_id = parsed_chat
                 user_chat_ids[user_id] = chat_id
                 save_user_data(user_id, "target_chat_id", chat_id)
-                await event.respond("Chat ID set successfully! ✅ Now i will Forward All Content in That Chat")
-            except ValueError:
-                await event.respond("Invalid chat ID! Send valid chat id starting with -100xxxxxxxx")
+                save_user_data(user_id, "chat_id", chat_id)
+                await event.respond(f"Chat ID set successfully! ✅ Now i will Forward All Content to: `{chat_id}`")
+            except Exception as e:
+                await event.respond(f"Error setting Chat ID: {e}")
                 
         elif session_type == 'setrename':
             custom_rename_tag = event.text

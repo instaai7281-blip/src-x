@@ -34,10 +34,14 @@ async def add_forward_cmd(client, message):
         return
 
     target_chat = parts[2].strip()
+    from devgagan.core.get_func import parse_target_chat
+    parsed_chat = parse_target_chat(target_chat)
+    if parsed_chat:
+        target_chat = parsed_chat
     
     # Simple validation of target chat ID
-    if not target_chat.startswith("-100"):
-        await message.reply_text("❌ **Error:** Target Chat ID must start with `-100`.")
+    if not target_chat.startswith("-100") and not target_chat.startswith("@"):
+        await message.reply_text("❌ **Error:** Target Chat ID must start with `-100` or `@`.")
         return
 
     await add_forward_mapping(target_user_id, target_chat)
