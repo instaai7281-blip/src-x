@@ -388,7 +388,7 @@ async def check_and_auto_forward(sender, message_or_file, caption=None, reply_ma
         if isinstance(message_or_file, PyMessage):
             await message_or_file.copy(
                 chat_id=dest_chat_id,
-                reply_to_message_id=dest_topic_id,
+                message_thread_id=dest_topic_id,
                 caption=caption
             )
         else:
@@ -470,7 +470,7 @@ async def log_upload(user_id, file_type, file_msg, upload_method, duration=None,
             try:
                 await file_msg.copy(
                     chat_id=dest_chat_id,
-                    reply_to_message_id=dest_topic_id,
+                    message_thread_id=dest_topic_id,
                     caption=clean_text
                 )
             except Exception as fe:
@@ -550,7 +550,7 @@ async def upload_media(sender, target_chat_id, file, caption, edit, topic_id, th
                     width=width,
                     duration=duration,
                     thumb=thumb_path,
-                    reply_to_message_id=topic_id,
+                    message_thread_id=topic_id,
                     parse_mode=ParseMode.MARKDOWN,
                     progress=progress_bar,
                     progress_args=("╔══━⚡️Uploading...⚡️━══╗\n", edit, time.time()),
@@ -563,7 +563,7 @@ async def upload_media(sender, target_chat_id, file, caption, edit, topic_id, th
                     photo=file,
                     caption=None,
                     progress=progress_bar,
-                    reply_to_message_id=topic_id,
+                    message_thread_id=topic_id,
                     progress_args=("╔══━⚡️Uploading...⚡️━══╗\n", edit, time.time()),
                     has_spoiler=has_spoiler
                 )
@@ -574,7 +574,7 @@ async def upload_media(sender, target_chat_id, file, caption, edit, topic_id, th
                     document=file,
                     caption=caption,
                     thumb=thumb_path,
-                    reply_to_message_id=topic_id,
+                    message_thread_id=topic_id,
                     parse_mode=ParseMode.MARKDOWN,
                     progress=progress_bar,
                     progress_args=("╔══━⚡️Uploading...⚡️━══╗\n", edit, time.time())
@@ -924,14 +924,14 @@ async def get_msg(userbot: TelegramClient, sender: int, edit_id: int, msg_link: 
         if msg.audio:
             if not await is_enabled(sender, "audio"):
                 return
-            result = await app.send_audio(target_chat_id, file, caption=caption, reply_to_message_id=topic_id)
+            result = await app.send_audio(target_chat_id, file, caption=caption, message_thread_id=topic_id)
             await result.copy(LOG_GROUP)
             await check_and_auto_forward(sender, result, caption=caption, source_topic_id=extract_message_topic_id(msg))
             await edit.delete(1)
             return
         
         if msg.voice:
-            result = await app.send_voice(target_chat_id, file, reply_to_message_id=topic_id)
+            result = await app.send_voice(target_chat_id, file, message_thread_id=topic_id)
             await result.copy(LOG_GROUP)
             await check_and_auto_forward(sender, result, source_topic_id=extract_message_topic_id(msg))
             await edit.delete(1)
@@ -940,7 +940,7 @@ async def get_msg(userbot: TelegramClient, sender: int, edit_id: int, msg_link: 
         if msg.photo:
             if not await is_enabled(sender, "photo"):
                 return
-            result = await app.send_photo(target_chat_id, file, caption=None, reply_to_message_id=topic_id)
+            result = await app.send_photo(target_chat_id, file, caption=None, message_thread_id=topic_id)
             await result.copy(LOG_GROUP)
             await check_and_auto_forward(sender, result, source_topic_id=extract_message_topic_id(msg))
             await edit.delete(1)
@@ -1010,7 +1010,7 @@ async def clone_message(app, msg, target_chat_id, topic_id, edit_id, log_group, 
     if not cleaned_text.strip():
         branding_tag = get_user_branding_tag(sender)
         cleaned_text = f"> **{branding_tag}**"
-    devgaganin = await app.send_message(target_chat_id, cleaned_text, reply_to_message_id=topic_id)
+    devgaganin = await app.send_message(target_chat_id, cleaned_text, message_thread_id=topic_id)
     await devgaganin.copy(log_group)
     if edit:
         try:
@@ -1031,7 +1031,7 @@ async def clone_text_message(app, msg, target_chat_id, topic_id, edit_id, log_gr
     if not cleaned_text.strip():
         branding_tag = get_user_branding_tag(sender)
         cleaned_text = f"> **{branding_tag}**"
-    devgaganin = await app.send_message(target_chat_id, cleaned_text, reply_to_message_id=topic_id)
+    devgaganin = await app.send_message(target_chat_id, cleaned_text, message_thread_id=topic_id)
     await devgaganin.copy(log_group)
     if edit:
         try:
@@ -1049,7 +1049,7 @@ async def handle_sticker(app, msg, target_chat_id, topic_id, edit_id, log_group)
             edit = await app.edit_message_text(msg.chat.id, edit_id, "Handling sticker...")
         except Exception:
             pass
-    result = await app.send_sticker(target_chat_id, msg.sticker.file_id, reply_to_message_id=topic_id)
+    result = await app.send_sticker(target_chat_id, msg.sticker.file_id, message_thread_id=topic_id)
     await result.copy(log_group)
     if edit:
         try:
@@ -1219,7 +1219,7 @@ async def copy_message_with_chat_id(app, userbot, sender, chat_id, message_id, e
             if not cleaned_text.strip():
                 branding_tag = get_user_branding_tag(sender)
                 cleaned_text = f"> **{branding_tag}**"
-            result = await app.send_message(target_chat_id, cleaned_text, reply_to_message_id=topic_id)
+            result = await app.send_message(target_chat_id, cleaned_text, message_thread_id=topic_id)
         
         if result:
             return True
@@ -1251,7 +1251,7 @@ async def copy_message_with_chat_id(app, userbot, sender, chat_id, message_id, e
                 if not cleaned_text.strip():
                     branding_tag = get_user_branding_tag(sender)
                     cleaned_text = f"> **{branding_tag}**"
-                await app.send_message(target_chat_id, cleaned_text, reply_to_message_id=topic_id)
+                await app.send_message(target_chat_id, cleaned_text, message_thread_id=topic_id)
                 return True
 
             custom_caption = get_user_caption_preference(sender)
@@ -1263,16 +1263,16 @@ async def copy_message_with_chat_id(app, userbot, sender, chat_id, message_id, e
                 try:
                     has_spoiler = get_user_spoiler_preference(sender)
                     if msg.video:
-                        await userbot.send_video(target_chat_id, msg.video, caption=final_caption, reply_to_message_id=topic_id, has_spoiler=has_spoiler)
+                        await userbot.send_video(target_chat_id, msg.video, caption=final_caption, message_thread_id=topic_id, has_spoiler=has_spoiler)
                         return True
                     elif msg.document:
-                        await userbot.send_document(target_chat_id, msg.document, caption=final_caption, reply_to_message_id=topic_id)
+                        await userbot.send_document(target_chat_id, msg.document, caption=final_caption, message_thread_id=topic_id)
                         return True
                     elif msg.photo:
-                        await userbot.send_photo(target_chat_id, msg.photo, caption=final_caption, reply_to_message_id=topic_id, has_spoiler=has_spoiler)
+                        await userbot.send_photo(target_chat_id, msg.photo, caption=final_caption, message_thread_id=topic_id, has_spoiler=has_spoiler)
                         return True
                     elif msg.audio:
-                        await userbot.send_audio(target_chat_id, msg.audio, caption=final_caption, reply_to_message_id=topic_id)
+                        await userbot.send_audio(target_chat_id, msg.audio, caption=final_caption, message_thread_id=topic_id)
                         return True
                 except Exception as ue:
                     print(f"Userbot instant copy failed: {ue}")
@@ -1307,21 +1307,21 @@ async def copy_message_with_chat_id(app, userbot, sender, chat_id, message_id, e
             file_size = os.path.getsize(file)
 
             if msg.photo:
-                await app.send_photo(target_chat_id, file, caption=None, reply_to_message_id=topic_id)
+                await app.send_photo(target_chat_id, file, caption=None, message_thread_id=topic_id)
             elif msg.video or msg.document:
                 freecheck = await chk_user(None, sender)
                 if file_size > size_limit and (freecheck == 0 or pro is None):
-                    await split_and_upload_file(app, sender, target_chat_id, file, final_caption, topic_id)
+                    await split_and_upload_file(app, sender, target_chat_id, file, final_caption, topic_id, source_topic_id=extract_message_topic_id(msg))
                 elif file_size > size_limit:
                     await handle_large_file(file, sender, edit, final_caption)
                 else:
-                    await upload_media(sender, target_chat_id, file, final_caption, edit, topic_id)
+                    await upload_media(sender, target_chat_id, file, final_caption, edit, topic_id, source_topic_id=extract_message_topic_id(msg))
             elif msg.audio:
-                await app.send_audio(target_chat_id, file, caption=final_caption, reply_to_message_id=topic_id)
+                await app.send_audio(target_chat_id, file, caption=final_caption, message_thread_id=topic_id)
             elif msg.voice:
-                await app.send_voice(target_chat_id, file, reply_to_message_id=topic_id)
+                await app.send_voice(target_chat_id, file, message_thread_id=topic_id)
             elif msg.sticker:
-                await app.send_sticker(target_chat_id, msg.sticker.file_id, reply_to_message_id=topic_id)
+                await app.send_sticker(target_chat_id, msg.sticker.file_id, message_thread_id=topic_id)
             
             return True
         except Exception as e:
@@ -1382,7 +1382,7 @@ async def send_media_message(app, target_chat_id, msg, caption, topic_id, sender
                 target_chat_id,
                 msg.video.file_id,
                 caption=caption,
-                reply_to_message_id=topic_id,
+                message_thread_id=topic_id,
                 has_spoiler=has_spoiler
             )
 
@@ -1391,7 +1391,7 @@ async def send_media_message(app, target_chat_id, msg, caption, topic_id, sender
                 target_chat_id,
                 msg.document.file_id,
                 caption=caption,
-                reply_to_message_id=topic_id,
+                message_thread_id=topic_id,
             )
 
         if msg.photo:
@@ -1399,7 +1399,7 @@ async def send_media_message(app, target_chat_id, msg, caption, topic_id, sender
                 target_chat_id,
                 msg.photo.file_id,
                 caption=caption,
-                reply_to_message_id=topic_id,
+                message_thread_id=topic_id,
                 has_spoiler=has_spoiler
             )
 
@@ -2487,7 +2487,7 @@ async def split_and_upload_file(app, sender, target_chat_id, file_path, caption,
             # Uploading part
             edit = await app.send_message(target_chat_id, f"⬆️ Uploading part {part_number + 1}...")
             part_caption = f"{caption} \n\n**Part : {part_number + 1}**"
-            sent_doc = await app.send_document(target_chat_id, document=part_file, caption=part_caption, reply_to_message_id=topic_id,
+            sent_doc = await app.send_document(target_chat_id, document=part_file, caption=part_caption, message_thread_id=topic_id,
                 thumb=thumb,
                 progress=progress_bar,
                 progress_args=("╭─────────────────────╮\n│      **__Pyro Uploader__**\n├─────────────────────", edit, time.time())
