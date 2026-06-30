@@ -386,21 +386,44 @@ async def check_and_auto_forward(sender, message_or_file, caption=None, reply_ma
                 
         from pyrogram.types import Message as PyMessage
         if isinstance(message_or_file, PyMessage):
-            await message_or_file.copy(
-                chat_id=dest_chat_id,
-                message_thread_id=dest_topic_id,
-                caption=caption
-            )
+            try:
+                await message_or_file.copy(
+                    chat_id=dest_chat_id,
+                    message_thread_id=dest_topic_id,
+                    caption=caption
+                )
+            except Exception as e:
+                if dest_topic_id:
+                    print(f"Auto-forward to topic {dest_topic_id} failed: {e}. Falling back to main group...")
+                    await message_or_file.copy(
+                        chat_id=dest_chat_id,
+                        caption=caption
+                    )
+                else:
+                    raise e
         else:
             if client_to_use:
-                await client_to_use.send_file(
-                    dest_chat_id,
-                    message_or_file,
-                    caption=caption,
-                    attributes=attributes,
-                    reply_to=dest_topic_id,
-                    thumb=thumb_path
-                )
+                try:
+                    await client_to_use.send_file(
+                        dest_chat_id,
+                        message_or_file,
+                        caption=caption,
+                        attributes=attributes,
+                        reply_to=dest_topic_id,
+                        thumb=thumb_path
+                    )
+                except Exception as e:
+                    if dest_topic_id:
+                        print(f"Auto-forward Telethon to topic {dest_topic_id} failed: {e}. Falling back to main group...")
+                        await client_to_use.send_file(
+                            dest_chat_id,
+                            message_or_file,
+                            caption=caption,
+                            attributes=attributes,
+                            thumb=thumb_path
+                        )
+                    else:
+                        raise e
     except Exception as e:
         print(f"Auto-forward helper failed: {e}")
 
@@ -1534,12 +1557,8 @@ def format_caption(original_caption, sender, custom_caption, filename=None):
 user_chat_ids = {}
 
 def get_target_chat_id(user_id):
-    if user_id in user_chat_ids:
-        return user_chat_ids[user_id]
     chat_id = load_user_data(user_id, "target_chat_id", None)
     if chat_id:
-        # If found, try parsing topic ID if it's stored in db as a string like "chat_id/topic_id"
-        user_chat_ids[user_id] = chat_id
         return chat_id
     return user_id
 
