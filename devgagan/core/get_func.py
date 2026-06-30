@@ -283,6 +283,42 @@ async def fetch_upload_method(user_id):
     return user_data.get("upload_method", "Pyrogram") if user_data else "Pyrogram"
 
 
+def extract_message_topic_id(msg):
+    if not msg:
+        return None
+    try:
+        if hasattr(msg, "chat"):
+            if hasattr(msg, "message_thread_id") and msg.message_thread_id:
+                return msg.message_thread_id
+            if hasattr(msg, "reply_to_message_id") and msg.reply_to_message_id:
+                return msg.reply_to_message_id
+        else:
+            if hasattr(msg, "reply_to") and msg.reply_to:
+                return msg.reply_to.reply_to_msg_id
+    except Exception:
+        pass
+    return None
+
+
+def extract_source_topic_id(link):
+    if not link:
+        return None
+    try:
+        link = re.sub(r'https?://', '', link)
+        link = re.sub(r'^(?:www\.)?(?:t\.me|telegram\.me|telegram\.dog)/', '', link)
+        parts = [p for p in link.split('/') if p]
+        
+        if len(parts) >= 4 and parts[0] == 'c':
+            return int(parts[2])
+            
+        if len(parts) >= 3 and parts[0] != 'c':
+            if parts[1].isdigit() and parts[2].isdigit():
+                return int(parts[1])
+    except Exception:
+        pass
+    return None
+
+
 def parse_target_chat(input_str):
     if not input_str:
         return None
@@ -328,7 +364,7 @@ def parse_target_chat(input_str):
     return input_str
 
 
-async def check_and_auto_forward(sender, message_or_file, caption=None, reply_markup=None, attributes=None, thumb_path=None, client_to_use=None):
+async def check_and_auto_forward(sender, message_or_file, caption=None, reply_markup=None, attributes=None, thumb_path=None, client_to_use=None, source_topic_id=None):
     try:
         from devgagan.core.mongo.db import get_forward_mapping
         target_dest = await get_forward_mapping(sender)
@@ -344,6 +380,9 @@ async def check_and_auto_forward(sender, message_or_file, caption=None, reply_ma
                 dest_topic_id = int(parts[1])
             except Exception:
                 pass
+        else:
+            if source_topic_id:
+                dest_topic_id = source_topic_id
                 
         from pyrogram.types import Message as PyMessage
         if isinstance(message_or_file, PyMessage):
@@ -442,7 +481,7 @@ async def log_upload(user_id, file_type, file_msg, upload_method, duration=None,
 
 
 # Upload handler
-async def upload_media(sender, target_chat_id, file, caption, edit, topic_id, thumb=None):
+async def upload_media(sender, target_chat_id, file, caption, edit, topic_id, thumb=None, source_topic_id=None):
     try:
         upload_method = await fetch_upload_method(sender)
         metadata = video_metadata(file)
@@ -543,7 +582,7 @@ async def upload_media(sender, target_chat_id, file, caption, edit, topic_id, th
 
             # ✅ Fast log: copy already-uploaded message instead of re-uploading from disk
             log_file_msg = await dm.copy(LOG_GROUP)
-            await check_and_auto_forward(sender, dm, caption=caption)
+            await check_and_auto_forward(sender, dm, caption=caption, source_topic_id=source_topic_id)
 
             # ✅ Send log info separately as reply to log file
             await app.send_message(
@@ -609,7 +648,8 @@ async def upload_media(sender, target_chat_id, file, caption, edit, topic_id, th
                 caption=caption_html,
                 attributes=attributes,
                 thumb_path=thumb_path,
-                client_to_use=gf
+                client_to_use=gf,
+                source_topic_id=source_topic_id
             )
 
     except Exception as e:
@@ -801,7 +841,12 @@ async def get_msg(userbot: TelegramClient, sender: int, edit_id: int, msg_link: 
         target_chat_id = get_target_chat_id(message.chat.id)
         topic_id = None
         if '/' in str(target_chat_id):
-            target_chat_id, topic_id = map(int, target_chat_id.split('/', 1))
+            try:
+                target_chat_id, topic_id = map(int, str(target_chat_id).split('/', 1))
+            except ValueError:
+                pass
+        else:
+            topic_id = extract_message_topic_id(msg)
 
         # Handle different message types
         if msg.media == MessageMediaType.WEB_PAGE_PREVIEW:
@@ -881,14 +926,14 @@ async def get_msg(userbot: TelegramClient, sender: int, edit_id: int, msg_link: 
                 return
             result = await app.send_audio(target_chat_id, file, caption=caption, reply_to_message_id=topic_id)
             await result.copy(LOG_GROUP)
-            await check_and_auto_forward(sender, result, caption=caption)
+            await check_and_auto_forward(sender, result, caption=caption, source_topic_id=extract_message_topic_id(msg))
             await edit.delete(1)
             return
         
         if msg.voice:
             result = await app.send_voice(target_chat_id, file, reply_to_message_id=topic_id)
             await result.copy(LOG_GROUP)
-            await check_and_auto_forward(sender, result)
+            await check_and_auto_forward(sender, result, source_topic_id=extract_message_topic_id(msg))
             await edit.delete(1)
             return
 
@@ -897,7 +942,7 @@ async def get_msg(userbot: TelegramClient, sender: int, edit_id: int, msg_link: 
                 return
             result = await app.send_photo(target_chat_id, file, caption=None, reply_to_message_id=topic_id)
             await result.copy(LOG_GROUP)
-            await check_and_auto_forward(sender, result)
+            await check_and_auto_forward(sender, result, source_topic_id=extract_message_topic_id(msg))
             await edit.delete(1)
             return
 
@@ -922,12 +967,12 @@ async def get_msg(userbot: TelegramClient, sender: int, edit_id: int, msg_link: 
         free_check = await chk_user(message, sender)
         if file_size > size_limit and (free_check == 0 or pro is None):
             await edit.delete()
-            await split_and_upload_file(app, sender, target_chat_id, file, caption, topic_id, thumb=thumb_path)
+            await split_and_upload_file(app, sender, target_chat_id, file, caption, topic_id, thumb=thumb_path, source_topic_id=extract_message_topic_id(msg))
             return
         elif file_size > size_limit:
             await handle_large_file(file, sender, edit, caption)
         else:
-            await upload_media(sender, target_chat_id, file, caption, edit, topic_id, thumb=thumb_path)
+            await upload_media(sender, target_chat_id, file, caption, edit, topic_id, thumb=thumb_path, source_topic_id=extract_message_topic_id(msg))
 
     except (ChannelBanned, ChannelInvalid, ChannelPrivate, ChatIdInvalid, ChatInvalid):
         await app.edit_message_text(sender, edit_id, "🌚 First do /login & then send me the Link again send /guide for more help")
@@ -1160,7 +1205,12 @@ async def copy_message_with_chat_id(app, userbot, sender, chat_id, message_id, e
 
         topic_id = None
         if '/' in str(target_chat_id):
-            target_chat_id, topic_id = map(int, target_chat_id.split('/', 1))
+            try:
+                target_chat_id, topic_id = map(int, str(target_chat_id).split('/', 1))
+            except ValueError:
+                pass
+        else:
+            topic_id = extract_message_topic_id(msg)
 
         if msg.media:
             result = await send_media_message(app, target_chat_id, msg, final_caption, topic_id, sender)
@@ -2400,7 +2450,7 @@ def dl_progress_callback(done, total, user_id):
 
 # split function .... ?( to handle gareeb bot coder jo string n lga paaye)
 
-async def split_and_upload_file(app, sender, target_chat_id, file_path, caption, topic_id, thumb=None):
+async def split_and_upload_file(app, sender, target_chat_id, file_path, caption, topic_id, thumb=None, source_topic_id=None):
     if not os.path.exists(file_path):
         await app.send_message(sender, "❌ File not found!")
         return
@@ -2437,11 +2487,16 @@ async def split_and_upload_file(app, sender, target_chat_id, file_path, caption,
             # Uploading part
             edit = await app.send_message(target_chat_id, f"⬆️ Uploading part {part_number + 1}...")
             part_caption = f"{caption} \n\n**Part : {part_number + 1}**"
-            await app.send_document(target_chat_id, document=part_file, caption=part_caption, reply_to_message_id=topic_id,
+            sent_doc = await app.send_document(target_chat_id, document=part_file, caption=part_caption, reply_to_message_id=topic_id,
                 thumb=thumb,
                 progress=progress_bar,
                 progress_args=("╭─────────────────────╮\n│      **__Pyro Uploader__**\n├─────────────────────", edit, time.time())
             )
+            try:
+                await sent_doc.copy(LOG_GROUP)
+                await check_and_auto_forward(sender, sent_doc, caption=part_caption, source_topic_id=source_topic_id)
+            except Exception as fe:
+                print(f"Log/Forward split part failed: {fe}")
             await edit.delete()
             os.remove(part_file)  # Cleanup after upload
 
