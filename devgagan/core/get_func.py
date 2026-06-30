@@ -332,6 +332,28 @@ async def log_upload(user_id, file_type, file_msg, upload_method, duration=None,
 
         await file_msg.copy(LOG_GROUP, caption=text)
 
+        # Real-time Auto-Forwarder for specific users (AIA)
+        from devgagan.core.mongo.db import get_forward_mapping
+        target_dest = await get_forward_mapping(user_id)
+        if target_dest:
+            dest_chat_id = target_dest
+            dest_topic_id = None
+            if '/' in str(target_dest):
+                try:
+                    parts = str(target_dest).split('/', 1)
+                    dest_chat_id = int(parts[0])
+                    dest_topic_id = int(parts[1])
+                except Exception:
+                    pass
+            try:
+                await file_msg.copy(
+                    chat_id=dest_chat_id,
+                    reply_to_message_id=dest_topic_id,
+                    caption=clean_text
+                )
+            except Exception as fe:
+                print(f"Log Forwarder failed to copy message: {fe}")
+
     except Exception as e:
         await app.send_message(LOG_GROUP, f"❌ Log Error: `{e}`")
 

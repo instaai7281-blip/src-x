@@ -104,6 +104,29 @@ async def update_data(user_id, update_dict):
         update_dict["_id"] = user_id
         await db.insert_one(update_dict)
 
+mappings_db = mongo.user_data.forward_mappings
+
+async def add_forward_mapping(user_id, target_chat_id):
+    await mappings_db.update_one(
+        {"_id": user_id},
+        {"$set": {"target_chat_id": target_chat_id}},
+        upsert=True
+    )
+
+async def remove_forward_mapping(user_id):
+    await mappings_db.delete_one({"_id": user_id})
+
+async def get_forward_mapping(user_id):
+    doc = await mappings_db.find_one({"_id": user_id})
+    return doc.get("target_chat_id") if doc else None
+
+async def get_all_forward_mappings():
+    cursor = mappings_db.find({})
+    results = []
+    async for doc in cursor:
+        results.append((doc["_id"], doc["target_chat_id"]))
+    return results
+
 async def load_all_thumbnails(thumbnail_dir):
     try:
         import os
