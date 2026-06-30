@@ -21,7 +21,18 @@ from devgagan.core.func import *
 from pyrogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, Message, BotCommand
 from pyrogram.raw.functions.bots import SetBotInfo
 from pyrogram.raw.types import InputUserSelf
- 
+
+from pyrogram.enums import ChatType
+
+@app.on_message(filters.private, group=-1)
+async def restrict_unauthorized_users(client, message: Message):
+    user_id = message.from_user.id if message.from_user else message.chat.id
+    from devgagan.core.func import chk_user
+    if await chk_user(message, user_id) == 1:
+        await message.reply_text("❌ **Access Denied:** Contact owner to get access.")
+        message.stop_propagation()
+
+
 @app.on_message(filters.command("set"))
 async def set(_, message):
     if message.from_user.id not in OWNER_ID:
